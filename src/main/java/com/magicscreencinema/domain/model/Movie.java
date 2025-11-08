@@ -17,7 +17,7 @@ public class Movie {
         this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
         this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
-        this.movieDuration = FieldValidator.validatePositiveLong(movieDuration, "Movie Duration");
+        this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
     }
 
     public String getName() {
@@ -57,7 +57,7 @@ public class Movie {
     }
 
     public void setMovieDuration(long movieDuration) {
-        this.movieDuration = FieldValidator.validatePositiveLong(movieDuration, "Movie Duration");
+        this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
     }
 
 

@@ -23,8 +23,6 @@ public abstract class Person {
         this.birthDate = FieldValidator.validateDateNotInThePast(birthDate, "Birth Date");
     }
 
-    public abstract Person register();
-
     protected void setFirstName(String firstName) {
         this.firstName = FieldValidator.validateNullOrEmptyString(firstName, "First Name");
     }
@@ -48,14 +46,6 @@ public abstract class Person {
     protected void setBirthDate(LocalDate birthDate) {
         FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
         this.birthDate = FieldValidator.validateDateNotInThePast(birthDate, "Birth Date");
-    }
-
-    protected String getProfile(){
-        return "First Name: " + firstName +
-                "\nLast Name" + lastName +
-                "\nPhone Number: " + (phoneNumber != null ? phoneNumber : "N/A") +
-                "\nEmail: " + email +
-                "\nBirth Date: " + birthDate.toString();
     }
 
     protected String getFirstName() {

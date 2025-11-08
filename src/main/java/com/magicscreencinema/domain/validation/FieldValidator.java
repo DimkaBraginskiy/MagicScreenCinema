@@ -29,24 +29,31 @@ public final class FieldValidator {
         return value;
     }
 
-    /**
-     * validates that long value is positive
-     */
-    public static long validatePositiveLong(long value, String fieldName) {
-        if (value <= 0) {
-            throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
-        }
-        return value;
-    }
 
     /**
-     * validates that int value is positive
+     * validates that Generic numerical value is positive
      */
-    public static int validatePositiveInt(int value, String fieldName) {
-        if (value <= 0) {
-            throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
+
+    public static<T> T validatePositiveNumber(T value, String fieldName){
+        if(value instanceof Integer intValue){
+            if (intValue < 0) {
+                throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
+            }
+            return value;
+        } else if(value instanceof Long longValue){
+            if (longValue <= 0) {
+                throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
+            }
+            return value;
+        } else if(value instanceof Double doubleValue){
+            if (doubleValue < 0) {
+                throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
+            }
+            return value;
+        } else {
+            throw new IllegalArgumentException("Unsupported number type for validation");
+
         }
-        return value;
     }
 
     /**

@@ -9,7 +9,7 @@ public class Advertisement {
 
     public Advertisement(String name, long duration, String advertiserName) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
-        this.duration = FieldValidator.validatePositiveLong(duration, "Duration");
+        this.duration = FieldValidator.validatePositiveNumber(duration, "Duration");
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");
     }
 
@@ -26,7 +26,7 @@ public class Advertisement {
     }
 
     public void setDuration(long duration) {
-        this.duration = FieldValidator.validatePositiveLong(duration, "Duration");
+        this.duration = FieldValidator.validatePositiveNumber(duration, "Duration");
     }
 
     public String getAdvertiserName() {
