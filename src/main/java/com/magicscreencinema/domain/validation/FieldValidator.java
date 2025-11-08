@@ -24,7 +24,7 @@ public final class FieldValidator {
         return value;
     }
 
-    public static LocalDate validateBirthDate(LocalDate value, String fieldName){
+    public static LocalDate validateDate(LocalDate value, String fieldName){
         if(value == null){
             throw new NullAttributeException(fieldName + " can not be null");
         }

@@ -21,7 +21,7 @@ public abstract class Person {
         this.phoneNumber = FieldValidator.validateNullable(phoneNumber, "Phone Number");
         this.email = FieldValidator.validateNullOrEmpty(email, "Email");
         this.password = FieldValidator.validateNullOrEmpty(password, "Password");
-        this.birthDate = FieldValidator.validateBirthDate(birthDate, "Birth Date");
+        this.birthDate = FieldValidator.validateDate(birthDate, "Birth Date");
     }
 
     public abstract Person register();
@@ -47,7 +47,7 @@ public abstract class Person {
     }
 
     protected void setBirthDate(LocalDate birthDate) {
-        this.birthDate = FieldValidator.validateBirthDate(birthDate, "Birth Date");
+        this.birthDate = FieldValidator.validateDate(birthDate, "Birth Date");
     }
 
     protected String getProfile(){
