@@ -1,7 +1,5 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.exception.EmptyStringException;
-import com.magicscreencinema.domain.exception.NullAttributeException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDate;
@@ -16,38 +14,40 @@ public abstract class Person {
     protected LocalDate birthDate;
 
     protected Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
-        this.firstName = FieldValidator.validateNullOrEmpty(firstName, "First Name");
-        this.lastName = FieldValidator.validateNullOrEmpty(lastName, "Last Name");
-        this.phoneNumber = FieldValidator.validateNullable(phoneNumber, "Phone Number");
-        this.email = FieldValidator.validateNullOrEmpty(email, "Email");
-        this.password = FieldValidator.validateNullOrEmpty(password, "Password");
-        this.birthDate = FieldValidator.validateDate(birthDate, "Birth Date");
+        this.firstName = FieldValidator.validateNullOrEmptyString(firstName, "First Name");
+        this.lastName = FieldValidator.validateNullOrEmptyString(lastName, "Last Name");
+        this.phoneNumber = FieldValidator.validateNullableString(phoneNumber, "Phone Number");
+        this.email = FieldValidator.validateNullOrEmptyString(email, "Email");
+        this.password = FieldValidator.validateNullOrEmptyString(password, "Password");
+        FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
+        this.birthDate = FieldValidator.validateDateNotInThePast(birthDate, "Birth Date");
     }
 
     public abstract Person register();
 
     protected void setFirstName(String firstName) {
-        this.firstName = FieldValidator.validateNullOrEmpty(firstName, "First Name");
+        this.firstName = FieldValidator.validateNullOrEmptyString(firstName, "First Name");
     }
 
     protected void setLastName(String lastName) {
-        this.lastName = FieldValidator.validateNullOrEmpty(lastName, "Last Name");
+        this.lastName = FieldValidator.validateNullOrEmptyString(lastName, "Last Name");
     }
 
     protected void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = FieldValidator.validateNullable(phoneNumber, "Phone Number");
+        this.phoneNumber = FieldValidator.validateNullableString(phoneNumber, "Phone Number");
     }
 
     protected void setEmail(String email) {
-        this.email = FieldValidator.validateNullOrEmpty(email, "Email");
+        this.email = FieldValidator.validateNullOrEmptyString(email, "Email");
     }
 
     protected void setPassword(String password) {
-        this.password = FieldValidator.validateNullOrEmpty(password, "Password");
+        this.password = FieldValidator.validateNullOrEmptyString(password, "Password");
     }
 
     protected void setBirthDate(LocalDate birthDate) {
-        this.birthDate = FieldValidator.validateDate(birthDate, "Birth Date");
+        FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
+        this.birthDate = FieldValidator.validateDateNotInThePast(birthDate, "Birth Date");
     }
 
     protected String getProfile(){

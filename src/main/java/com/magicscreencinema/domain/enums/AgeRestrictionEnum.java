@@ -1,4 +1,9 @@
 package com.magicscreencinema.domain.enums;
 
-public enum AgeRestriction {
+public enum AgeRestrictionEnum {
+    SIX,
+    NINE,
+    TWELVE,
+    SIXTEEN,
+    EIGHTEEN
 }
