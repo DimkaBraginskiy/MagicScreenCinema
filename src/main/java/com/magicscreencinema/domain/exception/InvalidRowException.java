@@ -6,6 +6,6 @@ public class InvalidRowException extends RuntimeException {
     }
 
     public InvalidRowException() {
-        super("Invalid row selected.");
+        super("Seat row exceeds hall max rows.");
     }
 }

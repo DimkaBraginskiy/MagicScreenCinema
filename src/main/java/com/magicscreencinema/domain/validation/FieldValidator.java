@@ -2,6 +2,7 @@ package com.magicscreencinema.domain.validation;
 
 import com.magicscreencinema.domain.enums.DayOfWeekEnum;
 import com.magicscreencinema.domain.exception.*;
+import com.magicscreencinema.domain.model.Seat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -159,5 +160,15 @@ public final class FieldValidator {
         }
 
         return List.copyOf(dayOfWeek);
+    }
+
+    public static List<Seat> validateSeatList(List<Seat> seats, String fieldName){
+        validateObjectNotNull(seats, fieldName);
+
+        if(seats.isEmpty()){
+            throw new InvalidDateTimeRangeException(fieldName + " cannot be empty");
+        }
+
+        return List.copyOf(seats);
     }
 }
