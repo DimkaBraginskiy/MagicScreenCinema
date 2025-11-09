@@ -1,0 +1,35 @@
+package com.magicscreencinema.domain.model;
+
+import com.magicscreencinema.domain.validation.FieldValidator;
+
+import java.time.LocalDateTime;
+
+public class LimitedDiscount {
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
+    public LimitedDiscount(LocalDateTime startTime, LocalDateTime endTime) {
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime,endTime);
+
+        this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime,endTime);
+        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime,endTime);
+        this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+}
