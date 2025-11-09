@@ -27,5 +27,5 @@ Thumbs.db
 
 ### Project ###
 # Uncomment if JSON files contain generated/sensitive data
-# data/
-# *.json
+db/
+*.json
