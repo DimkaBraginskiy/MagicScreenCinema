@@ -7,6 +7,7 @@ import com.magicscreencinema.domain.model.Hall;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -135,11 +136,13 @@ public final class FieldValidator {
      * validates that an object provided is different from one to which we pass
      * ALLOWS NULL value
      */
-    public static <T> T validateObjectRecursion(T passed, T passedTo, String passedName, String passedToName){
-        if(passedTo.equals(passed)){
-            throw new RecursionException("Can not pass " + passedName + " to " + passedToName);
+    public static <T> List<T> validateObjectRecursion(List<T> passedList, T passedTo) {
+        for (T passed : passedList) {
+            if (passedTo.equals(passed)) {
+                throw new RecursionException("An object cannot have a recursive association with itself");
+            }
         }
-        return passed;
+        return passedList;
     }
 
     /**
@@ -150,16 +153,12 @@ public final class FieldValidator {
     public static List<DayOfWeekEnum> validateDayOfWeekList(List<DayOfWeekEnum> dayOfWeek, String fieldName) {
         validateObjectNotNull(dayOfWeek, fieldName);
 
-        if (dayOfWeek.size() > 7) {
-            throw new IllegalArgumentException(fieldName + " Cannot have more than 7 days in a week");
-        }
-
-        Set<DayOfWeekEnum> uniqueDays = dayOfWeek.stream()
-                .map(d -> validateObjectNotNull(d, fieldName))
-                .collect(Collectors.toSet());
-
-        if (uniqueDays.size() != dayOfWeek.size()) {
-            throw new IllegalArgumentException("Duplicate days in " + fieldName + " are not allowed");
+        Set<DayOfWeekEnum> uniqueDays = new HashSet<>();
+        for (DayOfWeekEnum day : dayOfWeek) {
+            validateObjectNotNull(day, fieldName);
+            if (!uniqueDays.add(day)) {
+                throw new IllegalArgumentException("Duplicate day '" + day + "' in " + fieldName + " is not allowed");
+            }
         }
 
         return List.copyOf(dayOfWeek);
