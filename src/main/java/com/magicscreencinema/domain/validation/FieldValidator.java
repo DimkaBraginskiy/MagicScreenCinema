@@ -34,11 +34,9 @@ public final class FieldValidator {
         return value;
     }
 
-
     /**
      * validates that Generic numerical value is positive
      */
-
     public static<T> T validatePositiveNumber(T value, String fieldName){
         if(value instanceof Integer intValue){
             if (intValue < 0) {

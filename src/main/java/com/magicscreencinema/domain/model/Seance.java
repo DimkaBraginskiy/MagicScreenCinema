@@ -14,10 +14,12 @@ public class Seance {
     protected Movie movie;
     protected Hall hall;
 
-    public Seance(LocalDateTime startTime, LocalDateTime endTime, boolean isCancelled) {
+    public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
         this.endTime = getEndTime();
         this.isCancelled = FieldValidator.validateObjectNotNull(isCancelled, "Is Cancelled");
+        this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
+        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
     }
 
     public LocalDateTime getStartTime() {
@@ -48,5 +50,21 @@ public class Seance {
 
     public static void setAdvertisementsTime(int advertisementsTime) {
         Seance.advertisementsTime = advertisementsTime;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public void setMovie(Movie movie) {
+        this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
+    }
+
+    public Hall getHall() {
+        return hall;
+    }
+
+    public void setHall(Hall hall) {
+        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");;
     }
 }
