@@ -136,13 +136,11 @@ public final class FieldValidator {
      * validates that an object provided is different from one to which we pass
      * ALLOWS NULL value
      */
-    public static <T> List<T> validateObjectRecursion(List<T> passedList, T passedTo) {
-        for (T passed : passedList) {
-            if (passedTo.equals(passed)) {
-                throw new RecursionException("An object cannot have a recursive association with itself");
-            }
+    public static <T> T validateObjectRecursion(T passed, T passedTo, String passedName, String passedToName){
+        if(passedTo.equals(passed)){
+            throw new RecursionException("Can not pass " + passedName + " to " + passedToName);
         }
-        return passedList;
+        return passed;
     }
 
     /**
