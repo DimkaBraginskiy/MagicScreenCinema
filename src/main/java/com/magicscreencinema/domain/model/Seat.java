@@ -31,6 +31,7 @@ public class Seat {
     }
 
     public void setRow(int row) {
+        if (row > hall.getMaxRow()) throw new InvalidRowException("Seat row exceeds hall max rows.");
         this.row = FieldValidator.validatePositiveNumber(row, "Row");
     }
 

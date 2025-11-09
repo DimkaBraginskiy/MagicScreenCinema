@@ -8,25 +8,25 @@ public class Discount {
     private String promoCode;
 
     public Discount(double discountAmount, String promoCode) {
-        if(discountAmount > 0 && discountAmount < 1){
+        if (discountAmount > 0 && discountAmount < 1) {
             this.discountAmount = discountAmount;
-        }else{
+        } else {
             throw new InvalidDiscountException("Discount Amount must be a decimal value between 0 and 1");
         }
 
-        this.promoCode = FieldValidator.validateNullableString(promoCode, "Promo Code");
+        this.promoCode = FieldValidator.validateNullOrEmptyString(promoCode, "Promo Code");
     }
 
     public void setDiscountAmount(double discountAmount) {
-        if(discountAmount > 0 && discountAmount < 1){
+        if (discountAmount > 0 && discountAmount < 1) {
             this.discountAmount = discountAmount;
-        }else{
+        } else {
             throw new InvalidDiscountException("Discount Amount must be a decimal value between 0 and 1");
         }
     }
 
     public void setPromoCode(String promoCode) {
-        this.promoCode = FieldValidator.validateNullableString(promoCode, "Promo Code");
+        this.promoCode = FieldValidator.validateNullOrEmptyString(promoCode, "Promo Code");
     }
 
     public double getDiscountAmount() {

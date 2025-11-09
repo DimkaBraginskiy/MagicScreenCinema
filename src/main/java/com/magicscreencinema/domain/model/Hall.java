@@ -6,12 +6,12 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 import java.util.List;
 
 public class Hall {
-    protected int hallNumber;
-    protected HallTypeEnum hallType;
-    protected int maxRow;
-    protected int rowWidth;
+    private int hallNumber;
+    private HallTypeEnum hallType;
+    private int maxRow;
+    private int rowWidth;
 
-    protected List<Seat> seats;
+    private List<Seat> seats;
 
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, List<Seat> seats) {
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
@@ -30,7 +30,8 @@ public class Hall {
     }
 
     public void setRowWidth(int rowWidth) {
-        this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");;
+        this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
+        ;
     }
 
     public List<Seat> getSeats() {

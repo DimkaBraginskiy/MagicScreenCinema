@@ -18,7 +18,7 @@ public final class FieldValidator {
      */
     public static String validateNullOrEmptyString(String value, String fieldName){
         if (value == null) {
-            throw new NullAttributeException(fieldName + "  can not be null");
+            throw new NullAttributeException(fieldName + " can not be null");
         }
         if (value.trim().isEmpty()) {
             throw new EmptyStringException(fieldName + " can not be empty");
@@ -41,17 +41,17 @@ public final class FieldValidator {
      */
     public static<T> T validatePositiveNumber(T value, String fieldName){
         if(value instanceof Integer intValue){
-            if (intValue < 0) {
+            if (intValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
         } else if(value instanceof Long longValue){
-            if (longValue < 0) {
+            if (longValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
         } else if(value instanceof Double doubleValue){
-            if (doubleValue < 0) {
+            if (doubleValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
@@ -182,7 +182,7 @@ public final class FieldValidator {
                 throw new InvalidRowException("Seat row exceeds hall max rows.");
             }
 
-            if (seat.getSeatNumber() > rowWidth) {
+            if (seat.getSeatNumber() > rowWidth*seat.getRow()) {
                 throw new InvalidSeatNumberException("Seat number exceeds hall row width.");
             }
 
