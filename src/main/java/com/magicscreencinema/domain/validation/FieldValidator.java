@@ -4,12 +4,10 @@ import com.magicscreencinema.domain.enums.DayOfWeekEnum;
 import com.magicscreencinema.domain.exception.*;
 import com.magicscreencinema.domain.model.Seat;
 import com.magicscreencinema.domain.model.Hall;
-import com.magicscreencinema.domain.model.Seat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,7 +56,6 @@ public final class FieldValidator {
             return value;
         } else {
             throw new IllegalArgumentException("Unsupported number type for validation");
-
         }
     }
 
@@ -138,14 +135,18 @@ public final class FieldValidator {
      * validates that an object provided is different from one to which we pass
      * ALLOWS NULL value
      */
-    public static <T> T validateObjectSelfPassing(T passed, T passedTo, String passedName, String passedToName){
-        if(passedTo == passed){
-            throw new SelfPassingException("Can not pass " + passedName + " to " + passedToName);
+    public static <T> T validateObjectRecursion(T passed, T passedTo, String passedName, String passedToName){
+        if(passedTo.equals(passed)){
+            throw new RecursionException("Can not pass " + passedName + " to " + passedToName);
         }
         return passed;
     }
 
-
+    /**
+     *  validates a List of DayOfWeekEnums
+     *  Identifies duplicates by setting List's values to a Set.
+     *  Eliminates possibility of null values in a List.
+     */
     public static List<DayOfWeekEnum> validateDayOfWeekList(List<DayOfWeekEnum> dayOfWeek, String fieldName) {
         validateObjectNotNull(dayOfWeek, fieldName);
 
@@ -154,7 +155,7 @@ public final class FieldValidator {
         }
 
         Set<DayOfWeekEnum> uniqueDays = dayOfWeek.stream()
-                .peek(day -> FieldValidator.validateObjectNotNull(day, fieldName))
+                .map(d -> validateObjectNotNull(d, fieldName))
                 .collect(Collectors.toSet());
 
         if (uniqueDays.size() != dayOfWeek.size()) {
@@ -193,6 +194,7 @@ public final class FieldValidator {
 
         return seats;
     }
+
 
     public static List<Seat> validateSeatList(List<Seat> seats, String fieldName){
         validateObjectNotNull(seats, fieldName);

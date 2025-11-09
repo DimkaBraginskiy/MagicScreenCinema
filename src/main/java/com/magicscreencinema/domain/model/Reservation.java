@@ -5,21 +5,26 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Reservation {
     private UUID reservationNumber;
     private LocalDateTime reservationTime;
     private ReservationStatusEnum status;
+    private double price;
 
     private Discount discount;
     private List<Seat> seats;
 
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status) {
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status,  Discount discount, List<Seat> seats) {
         this.reservationNumber = UUID.randomUUID();
 
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
+
+        this.discount = FieldValidator.validateObjectNotNull(discount, "Discount");
+        this.seats = FieldValidator.validateSeatList(seats, "Seats");
     }
 
     public void setReservationTime(LocalDateTime reservationTime) {
@@ -38,6 +43,10 @@ public class Reservation {
         this.seats = FieldValidator.validateSeatList(seats, "Seats");
     }
 
+    public UUID getReservationNumber() {
+        return reservationNumber;
+    }
+
     public LocalDateTime getReservationTime() {
         return reservationTime;
     }
@@ -52,5 +61,20 @@ public class Reservation {
 
     public List<Seat> getSeats() {
         return seats;
+    }
+
+    public double getTotalPrice(){
+        List<Seat> seatList = Objects.requireNonNullElse(seats, List.of());
+
+        double total = 0.0;
+        for (Seat seat : seatList) {
+            if (seat != null) {
+                total += seat.getPrice();
+            }
+        }
+        double discountAmount = (discount == null) ? 0.0 : discount.getDiscountAmount();
+        total -= discountAmount;
+
+        return Math.max(0.0, total);
     }
 }

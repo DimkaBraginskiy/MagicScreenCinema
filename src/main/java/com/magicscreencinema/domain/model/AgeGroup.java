@@ -9,7 +9,7 @@ public class AgeGroup {
 
     public AgeGroup(String description, AgeGroupEnum group) {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
-        this.group = FieldValidator.validateObjectNotNull(group, "group");
+        this.group = FieldValidator.validateObjectNotNull(group, "Group");
     }
 
     public void setDescription(String description) {
@@ -17,7 +17,7 @@ public class AgeGroup {
     }
 
     public void setGroup(AgeGroupEnum group) {
-        this.group = FieldValidator.validateObjectNotNull(group, "group");
+        this.group = FieldValidator.validateObjectNotNull(group, "Group");
     }
 
     public String getDescription() {

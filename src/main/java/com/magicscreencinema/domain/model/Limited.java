@@ -12,8 +12,8 @@ public class Limited {
     public Limited(LocalDateTime startTime, LocalDateTime endTime) {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime,endTime);
 
-        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
         this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
     }
 
     public void setStartTime(LocalDateTime startTime) {

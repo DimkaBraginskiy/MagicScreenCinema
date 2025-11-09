@@ -31,7 +31,7 @@ public class Staff{
     }
 
     public void setManager(Staff manager) {
-        this.manager = FieldValidator.validateObjectSelfPassing(manager, this, "Manager", "Staff");
+        this.manager = FieldValidator.validateObjectRecursion(manager, this, "Manager", "Staff");
     }
 
     public LocalDate getHireDate() {
