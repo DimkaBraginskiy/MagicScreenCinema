@@ -1,11 +1,9 @@
 package org.example;
 
 import org.example.persistence.model.Author;
-import org.example.persistence.model.Book;
 import org.example.persistence.PersistenceManager;
 import org.example.persistence.SimpleObjectCollection;
 
-import java.util.List;
 import java.util.UUID;
 
 public class Main {
@@ -13,19 +11,16 @@ public class Main {
         try {
             PersistenceManager.run();
 
-            Book book = new Book();
-            book.setId(UUID.randomUUID());
-            book.setTitle("1984");
-
-            SimpleObjectCollection<Book> bookCollection = new SimpleObjectCollection<>(Book.class);
             SimpleObjectCollection<Author> authorCollection = new SimpleObjectCollection<>(Author.class);
 
+            Author author = authorCollection.findById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54"))
+                    .orElse(new Author());
 
-            Author author = new Author();
-            author.setId(UUID.randomUUID());
-            author.setBooks(List.of(book));
-            author.setName("George Orwell");
-            authorCollection.save(author);
+            System.out.println(author);
+            System.out.println(authorCollection.findAll());
+            System.out.println(authorCollection.existsById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54")));
+            System.out.println(authorCollection.existsById(UUID.randomUUID()));
+            System.out.println(authorCollection.deleteById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54")));
 
         } catch (Exception e) {
             throw new RuntimeException(e);

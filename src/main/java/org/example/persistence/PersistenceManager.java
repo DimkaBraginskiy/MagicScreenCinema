@@ -29,10 +29,6 @@ public class PersistenceManager {
         }
     }
 
-    private static String pathToPackageName(Path path) {
-        return path.toString().replace(File.separatorChar, '.');
-    }
-
     private static List<Class<?>> scanClasses(String packageName) throws Exception {
         List<Class<?>> classes = new ArrayList<>();
         String path = packageName.replace('.', '/');

@@ -3,11 +3,14 @@ package org.example.persistence;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class SimpleObjectCollection<T> implements ObjectCollection<T>{
@@ -19,15 +22,19 @@ public class SimpleObjectCollection<T> implements ObjectCollection<T>{
         if (!objectClass.isAnnotationPresent(Collection.class)) {
             throw new NotACollectionException("The class " + objectClass.getName() + " is not annotated with @Collection");
         }
-        this.idField = findIdField(objectClass).orElseThrow(() ->
+        this.idField = PersistenceUtil.findIdField(objectClass).orElseThrow(() ->
                 new MissingIdException("The class " + objectClass.getName() + " is missing an @Id annotated field"));
         collectionName = objectClass.getAnnotation(Collection.class).name();
     }
     @Override
     public void save(T object) {
-        Object id = extractId(object);
+        Object id = PersistenceUtil.extractId(object, idField);
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().
+                registerTypeAdapterFactory(new ReferenceTypeAdapterFactory())
+                .setPrettyPrinting()
+                .create();
+
         String json = gson.toJson(object);
 
         Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
@@ -41,50 +48,62 @@ public class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public T findById(Object id) {
-        return null;
+    public Optional<T> findById(Object id) {
+        Path objectPath = getObjectFilePath(id);
+
+        if(Files.exists(objectPath)){
+            try {
+                String json = Files.readString(objectPath);
+                Gson gson = new Gson();
+                return Optional.ofNullable(gson.fromJson(json, objectClass));
+            } catch (IOException e) {
+                throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<T> findAll() {
-        return null;
+        Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
+        File folder = collectionPath.toFile();
+
+        List<T> results = new ArrayList<>();
+        for(File file : Objects.requireNonNull(folder.listFiles())){
+            if(file.isFile() && file.getName().endsWith(".json")){
+                try {
+                    String json = Files.readString(file.toPath());
+                    Gson gson = new Gson();
+                    T object = gson.fromJson(json, objectClass);
+                    results.add(object);
+                } catch (IOException e) {
+                    throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
+                }
+            }
+        }
+        return results;
     }
 
     @Override
     public boolean existsById(Object id) {
-        return false;
+        Path objectPath = getObjectFilePath(id);
+        return Files.exists(objectPath);
     }
 
     @Override
     public boolean deleteById(Object id) {
-        return false;
-    }
-
-    private Object extractId(T object) {
-        Object id;
+        Path objectPath = getObjectFilePath(id);
         try {
-            id = idField.get(object);
-        } catch (IllegalAccessException e) {
-            throw new CouldNotPersistObjectException("Could not access id field of class " + objectClass.getName(), e);
+            return Files.deleteIfExists(objectPath);
+        } catch (IOException e) {
+            return false;
         }
-        if (id == null) {
-            throw new MissingIdException("The object of class " + objectClass.getName() + " has a null id");
-        }
-        return id;
     }
 
-    private Optional<Field> findIdField(Class<?> objectClass) {
-        Class<?> current = objectClass;
-        while (current != null && current != Object.class) {
-            for (Field field : current.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Id.class)) {
-                    field.setAccessible(true);
-                    return Optional.of(field);
-                }
-            }
-            current = current.getSuperclass();
-        }
-        return Optional.empty();
+    private Path getObjectFilePath(Object id) {
+        String idStr = id.toString();
+        Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
+        return collectionPath.resolve(idStr + ".json");
     }
 
 }
