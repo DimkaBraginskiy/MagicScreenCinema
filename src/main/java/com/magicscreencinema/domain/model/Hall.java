@@ -18,7 +18,7 @@ public class Hall {
         this.hallType = FieldValidator.validateObjectNotNull(hallType, "Hall Type");
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
-//        this.seats = FieldValidator.validateSeats...
+        this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
     }
 
     public int getHallNumber() {
@@ -38,7 +38,7 @@ public class Hall {
     }
 
     public void setSeats(List<Seat> seats) {
-//        this.seats = FieldValidator.validateSeats...;
+        this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
     }
 
     public void setHallNumber(int hallNumber) {

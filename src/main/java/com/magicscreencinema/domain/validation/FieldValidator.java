@@ -3,6 +3,8 @@ package com.magicscreencinema.domain.validation;
 import com.magicscreencinema.domain.enums.DayOfWeekEnum;
 import com.magicscreencinema.domain.exception.*;
 import com.magicscreencinema.domain.model.Seat;
+import com.magicscreencinema.domain.model.Hall;
+import com.magicscreencinema.domain.model.Seat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -160,6 +162,36 @@ public final class FieldValidator {
         }
 
         return List.copyOf(dayOfWeek);
+    }
+
+    /**
+     * validates that all seats are not null
+     * validates seatRows > maxRow -> throw InvalidRowException
+     * validates seatNumber > rowWidth -> throw InvalidSeatNumberException
+     * connects every seat to passed as an argument hall
+     */
+    public static List<Seat> validateSeatsInHallNotNull(List<Seat> seats, Hall hall) {
+        validateObjectNotNull(seats, "Seats list");
+        validateObjectNotNull(hall, "Hall");
+
+        int maxRow = hall.getMaxRow();
+        int rowWidth = hall.getRowWidth();
+
+        for (Seat seat : seats) {
+            validateObjectNotNull(seat, "Seat");
+
+            if (seat.getRow() > maxRow) {
+                throw new InvalidRowException();
+            }
+
+            if (seat.getSeatNumber() > rowWidth) {
+                throw new InvalidSeatNumberException();
+            }
+
+            seat.setHall(hall);
+        }
+
+        return seats;
     }
 
     public static List<Seat> validateSeatList(List<Seat> seats, String fieldName){

@@ -48,10 +48,6 @@ public class Seance {
         return advertisementsTime;
     }
 
-    public static void setAdvertisementsTime(int advertisementsTime) {
-        Seance.advertisementsTime = advertisementsTime;
-    }
-
     public Movie getMovie() {
         return movie;
     }
