@@ -29,3 +29,4 @@ Thumbs.db
 # Uncomment if JSON files contain generated/sensitive data
 db/
 *.json
+model/

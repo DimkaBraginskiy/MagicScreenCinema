@@ -11,23 +11,28 @@ import java.util.List;
 import java.util.Optional;
 
 public class SimpleObjectCollection<T> implements ObjectCollection<T>{
-    @Override
-    public void save(T object) {
-        Class<?> objectClass = object.getClass();
+    private final Class<T> objectClass;
+    private final Field idField;
+    private final String collectionName;
+    public SimpleObjectCollection(Class<T> objectClass) {
+        this.objectClass = objectClass;
         if (!objectClass.isAnnotationPresent(Collection.class)) {
             throw new NotACollectionException("The class " + objectClass.getName() + " is not annotated with @Collection");
         }
-        Object id = extractId(objectClass, object).orElseThrow(() ->
-                new MissingIdException("The object of class " + objectClass.getName() + "has the id of value 'null' or is missing an @Id annotated field value"));
+        this.idField = findIdField(objectClass).orElseThrow(() ->
+                new MissingIdException("The class " + objectClass.getName() + " is missing an @Id annotated field"));
+        collectionName = objectClass.getAnnotation(Collection.class).name();
+    }
+    @Override
+    public void save(T object) {
+        Object id = extractId(object);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(object);
 
-        Path collectionPath = PersistenceConfig.resolveCollectionPath(
-                objectClass.getAnnotation(Collection.class).name()
-        );
+        Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
 
-        Path objectPath = collectionPath.resolve(id.toString() + ".json");
+        Path objectPath = collectionPath.resolve(id + ".json");
         try {
             Files.writeString(objectPath, json);
         } catch (IOException e) {
@@ -55,15 +60,26 @@ public class SimpleObjectCollection<T> implements ObjectCollection<T>{
         return false;
     }
 
-    private Optional<Object> extractId(Class<?> objectClass, T object) {
+    private Object extractId(T object) {
+        Object id;
+        try {
+            id = idField.get(object);
+        } catch (IllegalAccessException e) {
+            throw new CouldNotPersistObjectException("Could not access id field of class " + objectClass.getName(), e);
+        }
+        if (id == null) {
+            throw new MissingIdException("The object of class " + objectClass.getName() + " has a null id");
+        }
+        return id;
+    }
+
+    private Optional<Field> findIdField(Class<?> objectClass) {
         Class<?> current = objectClass;
         while (current != null && current != Object.class) {
             for (Field field : current.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Id.class)) {
                     field.setAccessible(true);
-                    try {
-                        return Optional.ofNullable(field.get(object));
-                    } catch (IllegalAccessException ignored) {}
+                    return Optional.of(field);
                 }
             }
             current = current.getSuperclass();
