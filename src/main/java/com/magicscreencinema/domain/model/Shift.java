@@ -10,7 +10,7 @@ public class Shift {
     protected LocalDateTime endTime;
 
     public Shift(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime.isAfter(endTime)) throw new InvalidDateTimeRangeException();
+        if (startTime.isAfter(endTime)) throw new InvalidDateTimeRangeException("StartTime can not be bigger than EndTime");
 
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start time");
         this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");

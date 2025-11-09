@@ -6,13 +6,13 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Seance {
-    protected LocalDateTime startTime;
-    protected LocalDateTime endTime;
-    protected boolean isCancelled;
-    protected static int advertisementsTime = 20;
+    public LocalDateTime startTime;
+    public LocalDateTime endTime;
+    public boolean isCancelled;
+    public static int advertisementsTime = 20;
 
-    protected Movie movie;
-    protected Hall hall;
+    public Movie movie;
+    public Hall hall;
 
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");

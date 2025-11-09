@@ -117,7 +117,7 @@ public final class FieldValidator {
 
     public static void validateStartTimeIsAfterEndTime(LocalDateTime startTime, LocalDateTime endTime){
         if(startTime.isAfter(endTime)){
-            throw new InvalidDateTimeRangeException();
+            throw new InvalidDateTimeRangeException("StartTime can not be bigger than EndTime");
         }
     }
 
@@ -182,11 +182,11 @@ public final class FieldValidator {
             validateObjectNotNull(seat, "Seat");
 
             if (seat.getRow() > maxRow) {
-                throw new InvalidRowException();
+                throw new InvalidRowException("Seat row exceeds hall max rows.");
             }
 
             if (seat.getSeatNumber() > rowWidth) {
-                throw new InvalidSeatNumberException();
+                throw new InvalidSeatNumberException("Seat number exceeds hall row width.");
             }
 
             seat.setHall(hall);

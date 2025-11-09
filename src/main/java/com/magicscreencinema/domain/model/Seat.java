@@ -4,17 +4,17 @@ import com.magicscreencinema.domain.exception.InvalidRowException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 public class Seat {
-    protected int seatNumber;
-    protected int row;
-    protected static double price = 20;
+    public int seatNumber;
+    public int row;
+    public static double price = 20;
 
-    protected Hall hall;
+    public Hall hall;
 
     public Seat(int seatNumber, int row, Hall hall) {
         this.seatNumber = FieldValidator.validatePositiveNumber(seatNumber, "Seat Number");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
 
-        if (row > hall.getMaxRow()) throw new InvalidRowException();
+        if (row > hall.getMaxRow()) throw new InvalidRowException("Seat row exceeds hall max rows.");
         this.row = FieldValidator.validatePositiveNumber(row, "Row");
     }
 
