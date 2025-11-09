@@ -1,8 +1,10 @@
 package org.example;
 
+import org.example.persistence.ObjectCollectionRegistry;
 import org.example.persistence.model.Author;
 import org.example.persistence.PersistenceManager;
 import org.example.persistence.SimpleObjectCollection;
+import org.example.persistence.model.Book;
 
 import java.util.UUID;
 
@@ -12,16 +14,17 @@ public class Main {
             PersistenceManager.run();
 
             SimpleObjectCollection<Author> authorCollection = new SimpleObjectCollection<>(Author.class);
+            SimpleObjectCollection<Book> bookCollection = new SimpleObjectCollection<>(Book.class);
 
-            Author author = authorCollection.findById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54"))
+            ObjectCollectionRegistry.registerCollection("authors", authorCollection);
+            ObjectCollectionRegistry.registerCollection("books", bookCollection);
+
+
+            Author author = authorCollection.findById(UUID.fromString("37c5b371-d3a3-42d2-82cc-06553db3df36"))
                     .orElse(new Author());
 
-            System.out.println(author);
-            System.out.println(authorCollection.findAll());
-            System.out.println(authorCollection.existsById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54")));
-            System.out.println(authorCollection.existsById(UUID.randomUUID()));
-            System.out.println(authorCollection.deleteById(UUID.fromString("c1403cf6-15db-4bc8-b471-9320d0341a54")));
 
+            System.out.println(author);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

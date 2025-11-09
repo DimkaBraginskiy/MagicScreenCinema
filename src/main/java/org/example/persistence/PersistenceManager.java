@@ -16,8 +16,8 @@ public class PersistenceManager {
         List<Class<?>> classes = scanClasses(packageName);
 
         for (Class<?> cls : classes) {
-            if (cls.isAnnotationPresent(Collection.class)) {
-                Collection coll = cls.getAnnotation(Collection.class);
+            if (cls.isAnnotationPresent(ElementCollection.class)) {
+                ElementCollection coll = cls.getAnnotation(ElementCollection.class);
                 String folderName = coll.name();
 
                 Path folderPath = databasePath.resolve(folderName);

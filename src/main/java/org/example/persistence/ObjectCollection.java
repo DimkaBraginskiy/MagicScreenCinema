@@ -3,7 +3,7 @@ package org.example.persistence;
 import java.util.List;
 import java.util.Optional;
 
-interface ObjectCollection<T> {
+public interface ObjectCollection<T> {
     void save(T object);
     Optional<T> findById(Object id);
     List<T> findAll();

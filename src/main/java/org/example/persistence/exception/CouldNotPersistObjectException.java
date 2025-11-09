@@ -1,4 +1,4 @@
-package org.example.persistence;
+package org.example.persistence.exception;
 
 public class CouldNotPersistObjectException extends RuntimeException {
     public CouldNotPersistObjectException(String message) {

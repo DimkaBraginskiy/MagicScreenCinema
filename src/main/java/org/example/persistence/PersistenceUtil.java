@@ -1,7 +1,8 @@
 package org.example.persistence;
 
+import org.example.persistence.exception.MissingIdException;
+
 import java.lang.reflect.Field;
-import java.util.Optional;
 
 class PersistenceUtil {
     public static Object extractId(Object entity) {
@@ -36,17 +37,17 @@ class PersistenceUtil {
         }
     }
 
-    public static Optional<Field> findIdField(Class<?> objectClass) {
+    public static Field findIdField(Class<?> objectClass) {
         Class<?> current = objectClass;
         while (current != null && current != Object.class) {
             for (Field field : current.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Id.class)) {
                     field.setAccessible(true);
-                    return Optional.of(field);
+                    return field;
                 }
             }
             current = current.getSuperclass();
         }
-        return Optional.empty();
+        throw new MissingIdException("No field with @Id annotation found in class " + objectClass.getName());
     }
 }
