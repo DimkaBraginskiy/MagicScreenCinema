@@ -5,15 +5,14 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDate;
 
-public class Staff extends Person{
+public class Staff{
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
 
-    private Staff manager;
+    private Staff manager = null;
 
-    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
+    public Staff(LocalDate hireDate, double salary, ContractTypeEnum contractType) {
         this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
@@ -32,7 +31,7 @@ public class Staff extends Person{
     }
 
     public void setManager(Staff manager) {
-        this.manager = FieldValidator.validateObjectNotNull(manager, "Manager");
+        this.manager = FieldValidator.validateObjectSelfPassing(manager, this, "Manager", "Staff");
     }
 
     public LocalDate getHireDate() {

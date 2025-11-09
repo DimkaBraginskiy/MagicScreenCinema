@@ -1,9 +1,14 @@
 package com.magicscreencinema.domain.validation;
 
+import com.magicscreencinema.domain.enums.DayOfWeekEnum;
 import com.magicscreencinema.domain.exception.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class FieldValidator {
     /**
@@ -41,7 +46,7 @@ public final class FieldValidator {
             }
             return value;
         } else if(value instanceof Long longValue){
-            if (longValue <= 0) {
+            if (longValue < 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
@@ -112,6 +117,12 @@ public final class FieldValidator {
         return value;
     }
 
+    public static void validateStartTimeIsAfterEndTime(LocalDateTime startTime, LocalDateTime endTime){
+        if(startTime.isAfter(endTime)){
+            throw new InvalidDateTimeRangeException();
+        }
+    }
+
     /**
      * validates that an object is NOT null (e.g. Enum)
      */
@@ -120,5 +131,35 @@ public final class FieldValidator {
             throw new NullAttributeException(fieldName + " can not be null");
         }
         return value;
+    }
+
+    /**
+     * validates that an object provided is different from one to which we pass
+     * ALLOWS NULL value
+     */
+    public static <T> T validateObjectSelfPassing(T passed, T passedTo, String passedName, String passedToName){
+        if(passedTo == passed){
+            throw new SelfPassingException("Can not pass " + passedName + " to " + passedToName);
+        }
+        return passed;
+    }
+
+
+    public static List<DayOfWeekEnum> validateDayOfWeekList(List<DayOfWeekEnum> dayOfWeek, String fieldName) {
+        validateObjectNotNull(dayOfWeek, fieldName);
+
+        if (dayOfWeek.size() > 7) {
+            throw new IllegalArgumentException(fieldName + " Cannot have more than 7 days in a week");
+        }
+
+        Set<DayOfWeekEnum> uniqueDays = dayOfWeek.stream()
+                .peek(day -> FieldValidator.validateObjectNotNull(day, fieldName))
+                .collect(Collectors.toSet());
+
+        if (uniqueDays.size() != dayOfWeek.size()) {
+            throw new IllegalArgumentException("Duplicate days in " + fieldName + " are not allowed");
+        }
+
+        return List.copyOf(dayOfWeek);
     }
 }
