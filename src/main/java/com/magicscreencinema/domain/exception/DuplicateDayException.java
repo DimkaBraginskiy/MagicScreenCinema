@@ -1,0 +1,7 @@
+package com.magicscreencinema.domain.exception;
+
+public class DuplicateDayException extends RuntimeException {
+    public DuplicateDayException(String message) {
+        super(message);
+    }
+}

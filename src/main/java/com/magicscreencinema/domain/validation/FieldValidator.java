@@ -1,10 +1,10 @@
 package com.magicscreencinema.domain.validation;
 
-import com.magicscreencinema.domain.enums.DayOfWeekEnum;
 import com.magicscreencinema.domain.exception.*;
 import com.magicscreencinema.domain.model.Seat;
 import com.magicscreencinema.domain.model.Hall;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -136,9 +136,9 @@ public final class FieldValidator {
      * validates that an object provided is different from one to which we pass
      * ALLOWS NULL value
      */
-    public static <T> T validateObjectRecursion(T passed, T passedTo, String passedName, String passedToName){
+    public static <T> T validateObjectRecursion(T passed, T passedTo){
         if(passedTo.equals(passed)){
-            throw new RecursionException("Can not pass " + passedName + " to " + passedToName);
+            throw new RecursionException("An object cannot have a recursive association with itself");
         }
         return passed;
     }
@@ -148,14 +148,14 @@ public final class FieldValidator {
      *  Identifies duplicates by setting List's values to a Set.
      *  Eliminates possibility of null values in a List.
      */
-    public static List<DayOfWeekEnum> validateDayOfWeekList(List<DayOfWeekEnum> dayOfWeek, String fieldName) {
+    public static List<DayOfWeek> validateDayOfWeekList(List<DayOfWeek> dayOfWeek, String fieldName) {
         validateObjectNotNull(dayOfWeek, fieldName);
 
-        Set<DayOfWeekEnum> uniqueDays = new HashSet<>();
-        for (DayOfWeekEnum day : dayOfWeek) {
+        Set<DayOfWeek> uniqueDays = new HashSet<>();
+        for (DayOfWeek day : dayOfWeek) {
             validateObjectNotNull(day, fieldName);
             if (!uniqueDays.add(day)) {
-                throw new IllegalArgumentException("Duplicate day '" + day + "' in " + fieldName + " is not allowed");
+                throw new DuplicateDayException("Duplicate day '" + day + "' in " + fieldName + " is not allowed");
             }
         }
 
@@ -192,7 +192,9 @@ public final class FieldValidator {
         return seats;
     }
 
-
+    /**
+     * validates a seat List for now being null and empty
+     */
     public static List<Seat> validateSeatList(List<Seat> seats, String fieldName){
         validateObjectNotNull(seats, fieldName);
 

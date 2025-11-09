@@ -1,15 +1,14 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.exception.InvalidDateTimeRangeException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDateTime;
 
-public class Limited {
+public class LimitedDiscount {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    public Limited(LocalDateTime startTime, LocalDateTime endTime) {
+    public LimitedDiscount(LocalDateTime startTime, LocalDateTime endTime) {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime,endTime);
 
         this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");

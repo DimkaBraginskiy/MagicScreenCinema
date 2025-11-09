@@ -1,5 +1,6 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.exception.InvalidDiscountException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 public class Discount {
@@ -8,9 +9,9 @@ public class Discount {
 
     public Discount(double discountAmount, String promoCode) {
         if(discountAmount > 0 && discountAmount < 1){
-            this.discountAmount = FieldValidator.validateObjectNotNull(discountAmount, "Discount Amount");
+            this.discountAmount = discountAmount;
         }else{
-            throw new IllegalArgumentException("Discount Amount must be a decimal value between 0 and 1");
+            throw new InvalidDiscountException("Discount Amount must be a decimal value between 0 and 1");
         }
 
         this.promoCode = FieldValidator.validateNullableString(promoCode, "Promo Code");
@@ -18,9 +19,9 @@ public class Discount {
 
     public void setDiscountAmount(double discountAmount) {
         if(discountAmount > 0 && discountAmount < 1){
-            this.discountAmount = FieldValidator.validateObjectNotNull(discountAmount, "Discount Amount");
+            this.discountAmount = discountAmount;
         }else{
-            throw new IllegalArgumentException("Discount Amount must be a decimal value between 0 and 1");
+            throw new InvalidDiscountException("Discount Amount must be a decimal value between 0 and 1");
         }
     }
 

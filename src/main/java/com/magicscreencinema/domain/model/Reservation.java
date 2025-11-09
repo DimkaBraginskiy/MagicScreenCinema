@@ -72,7 +72,7 @@ public class Reservation {
                 total += seat.getPrice();
             }
         }
-        double discountAmount = (discount == null) ? 0.0 : discount.getDiscountAmount();
+        double discountAmount = discount == null ? 0.0 : total * discount.getDiscountAmount();
         total -= discountAmount;
 
         return Math.max(0.0, total);

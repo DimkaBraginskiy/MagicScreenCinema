@@ -4,18 +4,21 @@ import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
-public class Staff{
+public class Staff extends Person{
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
 
-    private Staff manager = null;
+    private Staff manager;
 
-    public Staff(LocalDate hireDate, double salary, ContractTypeEnum contractType) {
+    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
+        super(firstName, lastName, phoneNumber, email, password, birthDate);
         this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
+        this.manager = FieldValidator.validateObjectNotNull(manager, "Manager");
     }
 
     public void setHireDate(LocalDate hireDate) {
@@ -31,7 +34,7 @@ public class Staff{
     }
 
     public void setManager(Staff manager) {
-        this.manager = FieldValidator.validateObjectRecursion(manager, this, "Manager", "Staff");
+        this.manager = FieldValidator.validateObjectRecursion(manager, this);
     }
 
     public LocalDate getHireDate() {
@@ -46,7 +49,7 @@ public class Staff{
         return contractType;
     }
 
-    public Staff getManager() {
-        return manager;
+    public Optional<Staff> getManager() {
+        return Optional.ofNullable(manager);
     }
 }

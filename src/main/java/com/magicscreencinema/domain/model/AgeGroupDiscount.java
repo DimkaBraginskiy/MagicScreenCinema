@@ -3,11 +3,11 @@ package com.magicscreencinema.domain.model;
 import com.magicscreencinema.domain.enums.AgeGroupEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
-public class AgeGroup {
+public class AgeGroupDiscount {
     private String description;
     private AgeGroupEnum group;
 
-    public AgeGroup(String description, AgeGroupEnum group) {
+    public AgeGroupDiscount(String description, AgeGroupEnum group) {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
         this.group = FieldValidator.validateObjectNotNull(group, "Group");
     }
