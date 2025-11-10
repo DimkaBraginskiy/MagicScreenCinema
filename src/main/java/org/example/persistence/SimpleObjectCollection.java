@@ -27,6 +27,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
         collectionName = objectClass.getAnnotation(ElementCollection.class).name();
         gson = new GsonBuilder().
                 registerTypeAdapterFactory(new ReferenceTypeAdapterFactory())
+                .serializeNulls()
                 .setPrettyPrinting()
                 .create();
     }
@@ -46,20 +47,26 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public Optional<T> findById(UUID id) {
+    public Optional<T> findById(UUID id, boolean flushContext) {
         Path objectPath = getObjectFilePath(id);
 
         if(Files.exists(objectPath)){
             try {
                 String json = Files.readString(objectPath);
-                var result = Optional.ofNullable(gson.fromJson(json, objectClass));
-                PersistenceContext.flush();
-                return result;
+                return Optional.ofNullable(gson.fromJson(json, objectClass));
             } catch (IOException e) {
                 throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
             }
+            finally {
+                if(flushContext) PersistenceContext.flush();
+            }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<T> findById(UUID id) {
+        return findById(id, true);
     }
 
     @Override
@@ -74,9 +81,11 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                     String json = Files.readString(file.toPath());
                     T object = gson.fromJson(json, objectClass);
                     results.add(object);
-                    PersistenceContext.flush();
                 } catch (IOException e) {
                     throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
+                }
+                finally {
+                    PersistenceContext.flush();
                 }
             }
         }
