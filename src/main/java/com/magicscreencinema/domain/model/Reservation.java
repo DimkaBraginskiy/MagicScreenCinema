@@ -6,6 +6,7 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Reservation {
@@ -22,7 +23,7 @@ public class Reservation {
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
 
-        this.discount = FieldValidator.validateObjectNotNull(discount, "Discount");
+        this.discount = discount;
         this.seats = FieldValidator.validateSeatList(seats, "Seats");
     }
 
@@ -35,7 +36,7 @@ public class Reservation {
     }
 
     public void setDiscount(Discount discount) {
-        this.discount = FieldValidator.validateObjectNotNull(discount, "Discount");
+        this.discount = discount;
     }
 
     public void setSeats(List<Seat> seats) {
@@ -54,8 +55,8 @@ public class Reservation {
         return status;
     }
 
-    public Discount getDiscount() {
-        return discount;
+    public Optional<Discount> getDiscount() {
+        return Optional.ofNullable(discount);
     }
 
     public List<Seat> getSeats() {

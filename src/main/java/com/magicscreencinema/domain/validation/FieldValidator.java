@@ -207,7 +207,7 @@ public final class FieldValidator {
         validateObjectNotNull(seats, fieldName);
 
         if (seats.isEmpty()) {
-            throw new InvalidDateTimeRangeException(fieldName + " cannot be empty");
+            throw new EmptySeatListException(fieldName + " can not be empty");
         }
 
         return List.copyOf(seats);

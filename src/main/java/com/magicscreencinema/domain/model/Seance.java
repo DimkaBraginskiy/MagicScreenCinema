@@ -7,17 +7,15 @@ import java.time.LocalDateTime;
 
 public class Seance {
     private LocalDateTime startTime;
-    private LocalDateTime endTime;
     private boolean isCancelled;
-    private static int advertisementsTime = 20;
+    private static final int ADVERTISEMENTS_TIME = 20;
 
     public Movie movie;
     public Hall hall;
 
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
-        this.endTime = getEndTime();
-        this.isCancelled = FieldValidator.validateObjectNotNull(isCancelled, "Is Cancelled");
+        this.isCancelled = isCancelled;
         this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
     }
@@ -33,7 +31,7 @@ public class Seance {
     public LocalDateTime getEndTime() {
         return startTime
                 .plus(Duration.ofMillis(movie.getMovieDuration()))
-                .plusMinutes(advertisementsTime);
+                .plusMinutes(ADVERTISEMENTS_TIME);
     }
 
     public boolean isCancelled() {
@@ -41,11 +39,11 @@ public class Seance {
     }
 
     public void setCancelled(boolean cancelled) {
-        this.isCancelled = FieldValidator.validateObjectNotNull(isCancelled, "Is Cancelled");
+        this.isCancelled = cancelled;
     }
 
     public static int getAdvertisementsTime() {
-        return advertisementsTime;
+        return ADVERTISEMENTS_TIME;
     }
 
     public Movie getMovie() {
