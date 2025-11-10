@@ -8,7 +8,6 @@ import java.util.Properties;
 class PersistenceConfig {
 
     private static Path DATABASE_PATH;
-    private static String MODEL_PACKAGE;
 
     static {
         try {
@@ -25,15 +24,6 @@ class PersistenceConfig {
         }
 
         DATABASE_PATH = Path.of(props.getProperty("database.path", "db")).toAbsolutePath();
-        MODEL_PACKAGE = props.getProperty("model.package", "com.example.models");
-    }
-
-    public static Path getDatabasePath() {
-        return DATABASE_PATH;
-    }
-
-    public static String getModelPackage() {
-        return MODEL_PACKAGE;
     }
 
     public static Path resolveCollectionPath(String collectionName) {

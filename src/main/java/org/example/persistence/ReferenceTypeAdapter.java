@@ -242,7 +242,6 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     }
 
     private void readManyToManyRelationship(Field field, Object instance, UUID id) throws IllegalAccessException, IOException, NoSuchFieldException {
-        System.out.println("Reading ManyToMany relationship for field: " + field.getName());
         List<Object> relatedEntities = new ArrayList<>();
 
         if(field.isAnnotationPresent(Eager.class)) {
