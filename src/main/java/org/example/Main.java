@@ -5,6 +5,7 @@ import org.example.persistence.ObjectCollectionRegistry;
 import org.example.persistence.model.Author;
 import org.example.persistence.model.Book;
 import org.example.persistence.model.Publisher;
+import org.example.persistence.model.Rd;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +32,29 @@ public class Main {
             books.add(null);
 
             author.setBooks(books);
-            Publisher publisher = new Publisher();
-            publisher.setId(UUID.randomUUID());
-            publisher.setName("Publisher 1");
 
-            publisher.setBooks(books);
-            publisherCollection.save(publisher);
+            List<Publisher> publishers = new ArrayList<>();
+            for (int i = 1; i <= 3; i++) {
+                Publisher publisher = new Publisher();
+                publisher.setId(UUID.randomUUID());
+                publisher.setName("Publisher " + i);
+                publishers.add(publisher);
+            }
+
+            List<Rd> rdList = new ArrayList<>();
+            for (int i = 1; i <= 2; i++) {
+                Rd rd = new Rd("RD-" + i, i);
+                rdList.add(rd);
+            }
+
+            author.setPublishers(publishers);
+            author.setRdList(rdList);
+
 
             authorCollection.save(author);
 
-            System.out.println(bookCollection.findAll());
-            System.out.println(publisherCollection.findAll());
+            System.out.println(authorCollection.findById(author.getId()).orElse(null));
+            bookCollection.findAll().forEach(System.out::println);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }*/

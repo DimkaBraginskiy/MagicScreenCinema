@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.example.persistence.exception.DeserializationException;
+import org.example.persistence.exception.FieldNotFoundException;
 import org.example.persistence.exception.ReferenceIntegrityException;
 import org.example.persistence.exception.RelationshipDeclarationException;
 
@@ -95,19 +96,24 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             joinCollectionManager = getCollectionManger(field);
             joinCollectionManager.saveRelations(PersistenceUtil.extractId(entityToWrite), relatedIds);
         } else {
-            Field mappedField = validateManyToManyMappedField(field, genericType);
+            String mappedBy = field.getAnnotation(ManyToMany.class).mappedBy();
+            Field mappedField = validateManyToManyMappedField(mappedBy, genericType);
             joinCollectionManager = getCollectionManger(mappedField);
             joinCollectionManager.saveRelationsInverse(relatedIds, PersistenceUtil.extractId(entityToWrite));
         }
     }
 
-    private Field validateManyToManyMappedField(Field field, Class<?> genericType) throws NoSuchFieldException {
-        String mappedBy = field.getAnnotation(ManyToMany.class).mappedBy();
-        if(mappedBy.isEmpty()) throw new RelationshipDeclarationException("ManyToMany relationship must have JoinCollection annotation or mappedBy defined on field " + field.getName());
+    private Field validateManyToManyMappedField(String mappedBy, Class<?> genericType) {
+        if(mappedBy.isEmpty()) throw new RelationshipDeclarationException("ManyToMany relationship must have JoinCollection annotation or mappedBy defined on field");
 
-        Field mappedField = genericType.getDeclaredField(mappedBy);
+        Field mappedField = null;
+        try {
+            mappedField = genericType.getDeclaredField(mappedBy);
+        } catch (NoSuchFieldException e) {
+            throw new FieldNotFoundException("Field " + mappedBy + " not found in class " + type.getName(), e);
+        }
         if(!Objects.equals(PersistenceUtil.getGenericType(mappedField), type) || mappedField.getAnnotation(ManyToMany.class) == null){
-            throw new RelationshipDeclarationException("ManyToMany relationship is not properly declared on field " + field.getName());
+            throw new RelationshipDeclarationException("ManyToMany relationship is not properly declared on field " + mappedField.getName());
         }
         if(!mappedField.isAnnotationPresent(JoinCollection.class)){
             throw new RelationshipDeclarationException("Field " + mappedField.getName() + " must have JoinCollection annotation.");
@@ -210,8 +216,10 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                     field.set(instance, adapter.read(reader));
                 }
 
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                reader.skipValue();
+            } catch (IllegalAccessException e) {
+                throw new DeserializationException("Could not access field " + name + " of class " + type.getName(), e);
+            } catch (NoSuchFieldException e) {
+                throw new FieldNotFoundException("Field " + name + " not found in class " + type.getName(), e);
             }
         }
         reader.endObject();
@@ -261,9 +269,8 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         field.set(instance, children);
     }
 
-    private void readManyToManyRelationship(Field field, Object instance, UUID id) throws IllegalAccessException, IOException, NoSuchFieldException {
+    private void readManyToManyRelationship(Field field, Object instance, UUID id) throws IllegalAccessException, IOException{
         List<Object> relatedEntities = new ArrayList<>();
-
         if(field.isAnnotationPresent(Eager.class)) {
             JoinCollectionManager joinCollectionManager;
             List<UUID> relatedIds;
@@ -274,7 +281,8 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                 relatedIds = joinCollectionManager.getRelatedIds(id);
             }
             else {
-                Field mappedField = validateManyToManyMappedField(field, PersistenceUtil.getGenericType(field));
+                String mappedBy = field.getAnnotation(ManyToMany.class).mappedBy();
+                Field mappedField = validateManyToManyMappedField(mappedBy, PersistenceUtil.getGenericType(field));
                 joinCollectionManager = getCollectionManger(mappedField);
                 relatedIds = joinCollectionManager.getRelatedIdsInverse(id);
             }
