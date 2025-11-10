@@ -30,3 +30,4 @@ Thumbs.db
 db/
 *.json
 model/
+src/main/java/org/example/Main.java

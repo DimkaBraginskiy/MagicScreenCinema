@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SimpleObjectCollection<T> implements ObjectCollection<T>{
+class SimpleObjectCollection<T> implements ObjectCollection<T>{
     private final Class<T> objectClass;
     private final Field idField;
     private final String collectionName;
@@ -55,7 +55,9 @@ public class SimpleObjectCollection<T> implements ObjectCollection<T>{
         if(Files.exists(objectPath)){
             try {
                 String json = Files.readString(objectPath);
-                return Optional.ofNullable(gson.fromJson(json, objectClass));
+                var result = Optional.ofNullable(gson.fromJson(json, objectClass));
+                ReferenceTypeAdapter.flush();
+                return result;
             } catch (IOException e) {
                 throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
             }
@@ -75,6 +77,7 @@ public class SimpleObjectCollection<T> implements ObjectCollection<T>{
                     String json = Files.readString(file.toPath());
                     T object = gson.fromJson(json, objectClass);
                     results.add(object);
+                    ReferenceTypeAdapter.flush();
                 } catch (IOException e) {
                     throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
                 }

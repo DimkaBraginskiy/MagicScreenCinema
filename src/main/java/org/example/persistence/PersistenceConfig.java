@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Properties;
 
-public class PersistenceConfig {
+class PersistenceConfig {
 
     private static Path DATABASE_PATH;
     private static String MODEL_PACKAGE;

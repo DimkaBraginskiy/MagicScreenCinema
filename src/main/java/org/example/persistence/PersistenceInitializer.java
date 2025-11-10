@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class PersistenceManager {
+public class PersistenceInitializer {
     public static void run() throws Exception {
         String packageName = PersistenceConfig.getModelPackage();
         Path databasePath = PersistenceConfig.getDatabasePath();

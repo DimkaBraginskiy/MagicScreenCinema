@@ -50,4 +50,8 @@ class PersistenceUtil {
         }
         throw new MissingIdException("No field with @Id annotation found in class " + objectClass.getName());
     }
+
+    public static boolean isElementCollection(Class<?> clazz){
+        return clazz.isAnnotationPresent(ElementCollection.class);
+    }
 }

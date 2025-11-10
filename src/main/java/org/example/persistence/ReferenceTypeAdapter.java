@@ -7,7 +7,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.example.persistence.exception.DeserializationException;
+import org.example.persistence.exception.ReferenceIntegrityException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
@@ -23,41 +25,69 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     }
 
     @Override
-    public void write(JsonWriter jsonWriter, T t) throws IOException {
+    public void write(JsonWriter jsonWriter, T entityToWrite) throws IOException {
         jsonWriter.beginObject();
-        for (Field field : t.getClass().getDeclaredFields()) {
+        for (Field field : type.getDeclaredFields()) {
             field.setAccessible(true);
             try {
-                Object value = field.get(t);
-                if (field.getType().isAnnotationPresent(ElementCollection.class)) {
+                Object value = field.get(entityToWrite);
+
+                if (isCollectionEntity(field.getType())) {
+                    if(value == null) continue;
+
                     Object id = PersistenceUtil.extractId(value);
                     jsonWriter.name(field.getName()).value(id.toString());
                 }
-                else if (Iterable.class.isAssignableFrom(field.getType())) {
-                    jsonWriter.name(field.getName());
-                    jsonWriter.beginArray();
-                    Iterable<?> iterable = (Iterable<?>) value;
-                    if (iterable != null) {
-                        for (Object item : iterable) {
-                            Object id = PersistenceUtil.extractId(item);
-                            jsonWriter.value(id.toString());
-                        }
-                    }
-                    jsonWriter.endArray();
-                }
-                else {
-                    if (value != null) {
+                else if (isCollectionEntityCollection(field)) {
+                    if(field.isAnnotationPresent(OneToMany.class)) {
+                        saveOneToManyChildCollection(field, entityToWrite, value);
                         jsonWriter.name(field.getName());
-                        gson.toJson(value, field.getType(), jsonWriter);
+                        jsonWriter.beginArray();
+                        jsonWriter.endArray();
                     }
                 }
-
+                else if(value != null){
+                    jsonWriter.name(field.getName());
+                    gson.toJson(value, field.getType(), jsonWriter);
+                }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException("Could not access field " + field.getName(), e);
+            } catch (NoSuchFieldException e) {
+                throw new FileNotFoundException("Could not find field during cascade save: " + e.getMessage());
             }
         }
         jsonWriter.endObject();
     }
+
+    private void saveOneToManyChildCollection(Field field, Object entityToWrite, Object value) throws IllegalAccessException, NoSuchFieldException {
+        boolean isCascadeSave = field.isAnnotationPresent(CascadeSave.class);
+        String mappedBy = field.getAnnotation(OneToMany.class).mappedBy();
+
+        Class<?> genType = getGenericType(field);
+        Iterable<?> iterable = (Iterable<?>) value;
+        if (iterable == null) {
+            return;
+        }
+
+        for (Object item : iterable) {
+            Object childId = PersistenceUtil.extractId(item);
+
+            ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(genType);
+            if (!childCollection.existsById(childId) && !isCascadeSave) {
+                throw new ReferenceIntegrityException("Referenced entity of type " + genType.getName() + " with id " + childId + " does not exist.");
+
+            }
+            Field mappedField = item.getClass().getDeclaredField(mappedBy);
+            mappedField.setAccessible(true);
+            mappedField.set(item, entityToWrite);
+            saveChild(childCollection, item);
+        }
+    }
+
+    private <C> void saveChild(ObjectCollection<C> collection, Object child) {
+        collection.save((C) child);
+    }
+
 
     @Override
     public T read(JsonReader reader) throws IOException {
@@ -87,59 +117,24 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                 }
 
                 field.setAccessible(true);
-                System.out.println("Deserializing field: " + field.getName() + " of type: " + field.getType().getName());
 
                 if (field.equals(idField)) {
                     id = gson.fromJson(reader, field.getType());
                     field.set(instance, id);
 
-                    Map<Object, Object> typeMap = new HashMap<>();
-                    typeMap.put(id, instance);
-                    loadedObjects.put(type, typeMap);
+                    loadedObjects.computeIfAbsent(type, k -> new HashMap<>()).put(id, instance);
                     continue;
                 }
 
-                if (field.getType().isAnnotationPresent(ElementCollection.class)) {
-                    System.out.println("Field " + field.getName() + " is a reference to another entity.");
-                    Object refId = gson.fromJson(reader, PersistenceUtil.findIdField(field.getType()).getType());
-                    Object existing = getFromContext(field.getType(), refId);
-
-                    if (existing != null) {
-                        field.set(instance, existing);
-                        System.out.println("Found existing instance in context for id: " + refId);
-                    } else {
-                        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
-                        Object ref = collection.findById(refId).orElse(null);
-                        if (ref != null) registerInContext(ref);
-                        field.set(instance, ref);
-                        System.out.println("Loaded instance from collection for id: " + refId);
-                    };
-                }
-
-                else if (isCollectionEntityCollection(field)) {
-                    System.out.println("Field " + field.getName() + " is a collection of entity references.");
-                    if (field.isAnnotationPresent(Eager.class)) {
-                        Class<?> genericType = getGenericType(field);
-                        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
-
-                        List<Object> list = new ArrayList<>();
-                        reader.beginArray();
-                        while (reader.hasNext()) {
-                            Object elemId = gson.fromJson(reader, PersistenceUtil.findIdField(genericType).getType());
-                            System.out.println("Deserializing element with id: " + elemId + " of type: " + genericType.getName());
-                            Object existing = getFromContext(genericType, elemId);
-                            Object ref = existing != null ? existing : collection.findById(elemId).orElse(null);
-                            if (ref != null) registerInContext(ref);
-                            list.add(ref);
-                        }
-                        reader.endArray();
-                        field.set(instance, list);
-                    } else {
+                if (isCollectionEntity(field.getType())) {
+                   readSingleReference(field, instance, reader);
+                    ;
+                } else if (isCollectionEntityCollection(field)) {
+                    if(field.isAnnotationPresent(OneToMany.class)) {
+                        readCollectionReference(field, instance, id);
                         reader.skipValue();
                     }
-                }
-
-                else {
+                } else {
                     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(field.getGenericType()));
                     field.set(instance, adapter.read(reader));
                 }
@@ -149,8 +144,45 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             }
         }
         reader.endObject();
-        loadedObjects.remove(type);
         return instance;
+    }
+
+    public static void flush() {
+        loadedObjects.clear();
+    }
+
+    private void readSingleReference(Field field, Object instance, JsonReader reader) throws IllegalAccessException, IOException {
+        Object refId = gson.fromJson(reader, PersistenceUtil.findIdField(field.getType()).getType());
+        Object existing = getFromContext(field.getType(), refId);
+
+        if (existing != null) {
+            field.set(instance, existing);
+        } else {
+            ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
+            Object ref = collection.findById(refId).orElse(null);
+            if (ref != null) registerInContext(ref);
+            field.set(instance, ref);
+        }
+    }
+
+    private void readCollectionReference(Field field, Object instance, Object id) throws NoSuchFieldException, IllegalAccessException {
+        if (!field.isAnnotationPresent(Eager.class)) return;
+
+        Class<?> genericType = getGenericType(field);
+        ObjectCollection<?> collectionGeneric = ObjectCollectionRegistry.getCollection(genericType);
+        List<Object> children = new ArrayList<>();
+
+        for (Object child : collectionGeneric.findAll()) {
+            Field mappedField = genericType.getDeclaredField(field.getAnnotation(OneToMany.class).mappedBy());
+            mappedField.setAccessible(true);
+            Object parent = mappedField.get(child);
+            if (parent != null && PersistenceUtil.extractId(parent).equals(id)) {
+                children.add(child);
+                registerInContext(child);
+            }
+        }
+
+        field.set(instance, children);
     }
 
     private Class<?> getGenericType(Field field) {
@@ -189,7 +221,8 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             loadedObjects
                     .computeIfAbsent(obj.getClass(), k -> new HashMap<>())
                     .put(id, obj);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     private Object getFromContext(Class<?> clazz, Object id) {

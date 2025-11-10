@@ -1,30 +1,35 @@
 package org.example;
 
+import org.example.persistence.ObjectCollection;
 import org.example.persistence.ObjectCollectionRegistry;
 import org.example.persistence.model.Author;
-import org.example.persistence.PersistenceManager;
-import org.example.persistence.SimpleObjectCollection;
+import org.example.persistence.PersistenceInitializer;
 import org.example.persistence.model.Book;
 
+import java.util.List;
 import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            PersistenceManager.run();
+            PersistenceInitializer.run();
 
-            SimpleObjectCollection<Author> authorCollection = new SimpleObjectCollection<>(Author.class);
-            SimpleObjectCollection<Book> bookCollection = new SimpleObjectCollection<>(Book.class);
+            ObjectCollection<Author> authorCollection = ObjectCollectionRegistry.getCollection(Author.class);
+            ObjectCollection<Book> bookCollection = ObjectCollectionRegistry.getCollection(Book.class);
 
-            ObjectCollectionRegistry.registerCollection("authors", authorCollection);
-            ObjectCollectionRegistry.registerCollection("books", bookCollection);
+            Book book = new Book();
+            book.setId(UUID.randomUUID());
+            book.setTitle("Harry Potter and the Philosopher's Stone");
+
+            Author author = new Author();
+            author.setId(UUID.randomUUID());
+            author.setName("J.K. Rowling");
+            author.setBooks(List.of(book));
+
+            authorCollection.save(author);
 
 
-            Author author = authorCollection.findById(UUID.fromString("37c5b371-d3a3-42d2-82cc-06553db3df36"))
-                    .orElse(new Author());
 
-
-            System.out.println(author);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
