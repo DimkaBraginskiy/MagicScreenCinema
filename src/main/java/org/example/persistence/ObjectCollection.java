@@ -2,11 +2,12 @@ package org.example.persistence;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ObjectCollection<T> {
     void save(T object);
-    Optional<T> findById(Object id);
+    Optional<T> findById(UUID id);
     List<T> findAll();
-    boolean existsById(Object id);
-    boolean deleteById(Object id);
+    boolean existsById(UUID id);
+    boolean deleteById(UUID id);
 }

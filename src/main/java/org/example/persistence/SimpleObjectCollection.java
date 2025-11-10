@@ -11,10 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 class SimpleObjectCollection<T> implements ObjectCollection<T>{
     private final Class<T> objectClass;
@@ -35,7 +32,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
     @Override
     public void save(T object) {
-        Object id = PersistenceUtil.extractId(object, idField);
+        UUID id = PersistenceUtil.extractId(object, idField);
         String json = gson.toJson(object);
 
         Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
@@ -49,14 +46,14 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public Optional<T> findById(Object id) {
+    public Optional<T> findById(UUID id) {
         Path objectPath = getObjectFilePath(id);
 
         if(Files.exists(objectPath)){
             try {
                 String json = Files.readString(objectPath);
                 var result = Optional.ofNullable(gson.fromJson(json, objectClass));
-                ReferenceTypeAdapter.flush();
+                PersistenceContext.flush();
                 return result;
             } catch (IOException e) {
                 throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
@@ -77,7 +74,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                     String json = Files.readString(file.toPath());
                     T object = gson.fromJson(json, objectClass);
                     results.add(object);
-                    ReferenceTypeAdapter.flush();
+                    PersistenceContext.flush();
                 } catch (IOException e) {
                     throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
                 }
@@ -87,13 +84,13 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public boolean existsById(Object id) {
+    public boolean existsById(UUID id) {
         Path objectPath = getObjectFilePath(id);
         return Files.exists(objectPath);
     }
 
     @Override
-    public boolean deleteById(Object id) {
+    public boolean deleteById(UUID id) {
         Path objectPath = getObjectFilePath(id);
         try {
             return Files.deleteIfExists(objectPath);
