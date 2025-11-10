@@ -11,6 +11,9 @@ import java.util.UUID;
 
 class PersistenceUtil {
     public static UUID extractId(Object entity) {
+        if(entity == null){
+            throw new MissingIdException("The provided entity is null");
+        }
         var clazz = entity.getClass();
         for (var field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(Id.class)) {

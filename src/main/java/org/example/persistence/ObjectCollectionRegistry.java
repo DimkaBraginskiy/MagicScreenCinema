@@ -17,24 +17,25 @@ public class ObjectCollectionRegistry {
 
     public static <T> ObjectCollection<T> getCollection(Class<T> clazz) {
         if(PersistenceUtil.isElementCollection(clazz)) {
-                ElementCollection coll = clazz.getAnnotation(ElementCollection.class);
-                String collectionName = coll.name();
+            addToDb(clazz);
+            ObjectCollection<?> collection = collections.computeIfAbsent(clazz, k -> create(clazz));
 
-                Path folderPath = PersistenceConfig.resolveCollectionPath(collectionName);
-                if (!Files.exists(folderPath)) {
-                    try {
-                        Files.createDirectories(folderPath);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Could not create collection folder: " + folderPath, e);
-                    }
-                    System.out.println("Created collection folder: " + folderPath);
-                }
-
-            ObjectCollection<?> collection = collections.computeIfAbsent(
-                    clazz, k -> create(clazz)
-            );
             return (ObjectCollection<T>) collection;
         }
         throw new NotACollectionException(clazz.getName() + " is not annotated with @ElementCollection");
+    }
+
+    private static void addToDb(Class<?> clazz) {
+        ElementCollection coll = clazz.getAnnotation(ElementCollection.class);
+        String collectionName = coll.name();
+        Path folderPath = PersistenceConfig.resolveCollectionPath(collectionName);
+        if (!Files.exists(folderPath)) {
+            try {
+                Files.createDirectories(folderPath);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not create collection folder: " + folderPath, e);
+            }
+            System.out.println("Created collection folder: " + folderPath);
+        }
     }
 }

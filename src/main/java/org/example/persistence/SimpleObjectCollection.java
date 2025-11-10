@@ -33,6 +33,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
     @Override
     public void save(T object) {
+        if(object == null) return;
         UUID id = PersistenceUtil.extractId(object, idField);
         String json = gson.toJson(object);
 
@@ -70,7 +71,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public List<T> findAll() {
+    public List<T> findAll(boolean flushContext) {
         Path collectionPath = PersistenceConfig.resolveCollectionPath(collectionName);
         File folder = collectionPath.toFile();
 
@@ -85,11 +86,16 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                     throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
                 }
                 finally {
-                    PersistenceContext.flush();
+                    if(flushContext) PersistenceContext.flush();
                 }
             }
         }
         return results;
+    }
+
+    @Override
+    public List<T> findAll() {
+        return findAll(true);
     }
 
     @Override

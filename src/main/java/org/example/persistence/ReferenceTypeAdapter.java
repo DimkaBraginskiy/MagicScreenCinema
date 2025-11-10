@@ -31,10 +31,16 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             field.setAccessible(true);
             try {
                 Object value = field.get(entityToWrite);
+                if(value == null){
+                    jsonWriter.name(field.getName()).nullValue();
+                    continue;
+                }
 
                 if (PersistenceUtil.isElementCollection(field.getType())) {
-                    Object id = PersistenceUtil.extractId(value);
-                    jsonWriter.name(field.getName()).value(id.toString());
+                    if(field.isAnnotationPresent(ManyToOne.class)) {
+                        Object id = PersistenceUtil.extractId(value);
+                        jsonWriter.name(field.getName()).value(id.toString());
+                    }
                 }
                 else if (PersistenceUtil.isCollectionOfElementCollection(field)) {
                     if(field.isAnnotationPresent(OneToMany.class)) {
@@ -68,14 +74,16 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     private void saveManyToManyRelationship(Field field, Object entityToWrite, Object value) throws IllegalAccessException, NoSuchFieldException, IOException {
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(PersistenceUtil.getGenericType(field));
         Collection<?> childCollection = (Collection<?>) value;
+        if(childCollection == null) return;
+
         Class<?> genericType = PersistenceUtil.getGenericType(field);
         boolean isCascade = field.isAnnotationPresent(CascadeSave.class);
 
         JoinCollectionManager joinCollectionManager;
         List<UUID> relatedIds = new ArrayList<>();
 
-        if(childCollection == null) return;
         for(Object item : childCollection){
+            if(item == null) continue;
             UUID relatedId = PersistenceUtil.extractId(item);
             if(!collection.existsById(relatedId)){
                 if(isCascade) saveChild(collection, item);
@@ -124,6 +132,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         if (iterable == null) return;
 
         for (Object item : iterable) {
+            if(item == null) continue;
             UUID childId = PersistenceUtil.extractId(item);
 
             ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(genType);
@@ -133,6 +142,9 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             }
             Field mappedField = item.getClass().getDeclaredField(mappedBy);
             mappedField.setAccessible(true);
+            if(!mappedField.getType().equals(type)) {
+                throw new RelationshipDeclarationException("MappedBy field points to the wrong attribute type: " + field.getName() + ". Expected " + type.getName() + " but found " + mappedField.getType().getName());
+            }
             mappedField.set(item, entityToWrite);
             saveChild(childCollection, item);
         }
@@ -182,7 +194,6 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
                 if (PersistenceUtil.isElementCollection(field.getType())) {
                    readSingleReference(field, instance, reader);
-                    ;
                 }
                 else if (PersistenceUtil.isCollectionOfElementCollection(field)) {
                     if(field.isAnnotationPresent(OneToMany.class)) {
@@ -209,6 +220,10 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
     private void readSingleReference(Field field, Object instance, JsonReader reader) throws IllegalAccessException, IOException {
         UUID refId = gson.fromJson(reader, PersistenceUtil.findIdField(field.getType()).getType());
+        if(refId == null) {
+            field.set(instance, null);
+            return;
+        }
         Object existing = PersistenceContext.getFromContext(field.getType(), refId);
 
         if (existing != null) {
@@ -222,13 +237,18 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     }
 
     private void readOneToManyRelationship(Field field, Object instance, UUID id) throws NoSuchFieldException, IllegalAccessException {
-        if (!field.isAnnotationPresent(Eager.class)) return;
+        if (!field.isAnnotationPresent(Eager.class)){
+            field.set(instance, Collections.emptyList());
+            return;
+        }
 
         Class<?> genericType = PersistenceUtil.getGenericType(field);
+        if(genericType == null) return;
+
         ObjectCollection<?> collectionGeneric = ObjectCollectionRegistry.getCollection(genericType);
         List<Object> children = new ArrayList<>();
 
-        for (Object child : collectionGeneric.findAll()) {
+        for (Object child : collectionGeneric.findAll(false)) {
             Field mappedField = genericType.getDeclaredField(field.getAnnotation(OneToMany.class).mappedBy());
             mappedField.setAccessible(true);
             Object parent = mappedField.get(child);
@@ -245,7 +265,6 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         List<Object> relatedEntities = new ArrayList<>();
 
         if(field.isAnnotationPresent(Eager.class)) {
-
             JoinCollectionManager joinCollectionManager;
             List<UUID> relatedIds;
             Class<?> genericType = PersistenceUtil.getGenericType(field);
