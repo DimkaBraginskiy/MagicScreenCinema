@@ -4,11 +4,11 @@ import com.magicscreencinema.domain.exception.InvalidRowException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 public class Seat {
-    public int seatNumber;
-    public int row;
-    public static double price = 20;
+    private int seatNumber;
+    private int row;
+    private static final double PRICE = 20;
 
-    public Hall hall;
+    private Hall hall;
 
     public Seat(int seatNumber, int row, Hall hall) {
         this.seatNumber = FieldValidator.validatePositiveNumber(seatNumber, "Seat Number");
@@ -42,11 +42,11 @@ public class Seat {
         double segment = maxRow / 3.0;
 
         if (row <= segment) {
-            return price * 0.7;     // front - cheaper
+            return PRICE * 0.7;     // front - cheaper
         } else if (row <= segment * 2) {
-            return price;           // default
+            return PRICE;           // default
         } else {
-            return price * 1.3;     // back - expensive
+            return PRICE * 1.3;     // back - expensive
         }
     }
 

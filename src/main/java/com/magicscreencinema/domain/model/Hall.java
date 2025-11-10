@@ -31,7 +31,6 @@ public class Hall {
 
     public void setRowWidth(int rowWidth) {
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
-        ;
     }
 
     public List<Seat> getSeats() {

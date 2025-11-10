@@ -5,9 +5,9 @@ import com.magicscreencinema.domain.enums.PaymentStatusEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 public class Payment {
-    protected PaymentMethodEnum paymentMethod;
-    protected PaymentStatusEnum paymentStatus;
-    public String transactionId;
+    private PaymentMethodEnum paymentMethod;
+    private PaymentStatusEnum paymentStatus;
+    private String transactionId;
 
     public Payment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId) {
         this.paymentMethod = FieldValidator.validateObjectNotNull(paymentMethod, "Payment Method");

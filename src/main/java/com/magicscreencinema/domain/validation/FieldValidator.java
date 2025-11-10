@@ -10,13 +10,12 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class FieldValidator {
     /**
      * validates that a String value is neither null nor empty
      */
-    public static String validateNullOrEmptyString(String value, String fieldName){
+    public static String validateNullOrEmptyString(String value, String fieldName) {
         if (value == null) {
             throw new NullAttributeException(fieldName + " can not be null");
         }
@@ -27,30 +26,44 @@ public final class FieldValidator {
     }
 
     /**
-     * validates that a String value is neither null nor empty
+     * validates that Generic numerical value is non-negative
      */
-    public static String validateNullableString(String value, String fieldName){
-        if (value != null && value.isEmpty()) {
-            throw new EmptyStringException(fieldName + " can not be empty");
+    public static <T> T validateNonNegativeNumber(T value, String fieldName) {
+        if (value instanceof Integer intValue) {
+            if (intValue < 0) {
+                throw new NegativeValueException(fieldName + " must be a non-negative value ( >= 0).");
+            }
+            return value;
+        } else if (value instanceof Long longValue) {
+            if (longValue < 0) {
+                throw new NegativeValueException(fieldName + " must be a non-negative value ( >= 0).");
+            }
+            return value;
+        } else if (value instanceof Double doubleValue) {
+            if (doubleValue < 0) {
+                throw new NegativeValueException(fieldName + " must be a non-negative value ( >= 0).");
+            }
+            return value;
+        } else {
+            throw new IllegalArgumentException("Unsupported number type for validation");
         }
-        return value;
     }
 
     /**
      * validates that Generic numerical value is positive
      */
-    public static<T> T validatePositiveNumber(T value, String fieldName){
-        if(value instanceof Integer intValue){
+    public static <T> T validatePositiveNumber(T value, String fieldName) {
+        if (value instanceof Integer intValue) {
             if (intValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
-        } else if(value instanceof Long longValue){
+        } else if (value instanceof Long longValue) {
             if (longValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
             return value;
-        } else if(value instanceof Double doubleValue){
+        } else if (value instanceof Double doubleValue) {
             if (doubleValue <= 0) {
                 throw new NonPositiveValueException(fieldName + " must be a positive value ( > 0).");
             }
@@ -89,20 +102,6 @@ public final class FieldValidator {
     }
 
     /**
-     * validates a date-time that must NOT be in the future
-     */
-    public static LocalDateTime validateDateTimeNotInTheFuture(LocalDateTime value, String fieldName) {
-        if (value == null) {
-            throw new NullAttributeException(fieldName + " can not be null");
-        }
-
-        if (value.isAfter(LocalDateTime.now())) {
-            throw new DateInFutureException(fieldName + " can not be in the future");
-        }
-        return value;
-    }
-
-    /**
      * validates a date-time that must NOT be in the past
      */
     public static LocalDateTime validateDateTimeNotInThePast(LocalDateTime value, String fieldName) {
@@ -116,8 +115,17 @@ public final class FieldValidator {
         return value;
     }
 
-    public static void validateStartTimeIsAfterEndTime(LocalDateTime startTime, LocalDateTime endTime){
-        if(startTime.isAfter(endTime)){
+    /**
+     * validates that startTime is after endTime and both are not null
+     */
+    public static void validateStartTimeIsAfterEndTime(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime == null)
+            throw new NullAttributeException("Start Time can not be null");
+
+        if (endTime == null)
+            throw new NullAttributeException("End Time can not be null");
+
+        if (startTime.isAfter(endTime)) {
             throw new InvalidDateTimeRangeException("StartTime can not be bigger than EndTime");
         }
     }
@@ -136,17 +144,17 @@ public final class FieldValidator {
      * validates that an object provided is different from one to which we pass
      * ALLOWS NULL value
      */
-    public static <T> T validateObjectRecursion(T passed, T passedTo){
-        if(passedTo.equals(passed)){
+    public static <T> T validateObjectRecursion(T passed, T passedTo) {
+        if (passedTo.equals(passed)) {
             throw new RecursionException("An object cannot have a recursive association with itself");
         }
         return passed;
     }
 
     /**
-     *  validates a List of DayOfWeekEnums
-     *  Identifies duplicates by setting List's values to a Set.
-     *  Eliminates possibility of null values in a List.
+     * validates a List of DayOfWeekEnums
+     * Identifies duplicates by setting List's values to a Set.
+     * Eliminates possibility of null values in a List.
      */
     public static List<DayOfWeek> validateDayOfWeekList(List<DayOfWeek> dayOfWeek, String fieldName) {
         validateObjectNotNull(dayOfWeek, fieldName);
@@ -182,7 +190,7 @@ public final class FieldValidator {
                 throw new InvalidRowException("Seat row exceeds hall max rows.");
             }
 
-            if (seat.getSeatNumber() > rowWidth*seat.getRow()) {
+            if (seat.getSeatNumber() > rowWidth) {
                 throw new InvalidSeatNumberException("Seat number exceeds hall row width.");
             }
 
@@ -195,13 +203,48 @@ public final class FieldValidator {
     /**
      * validates a seat List for now being null and empty
      */
-    public static List<Seat> validateSeatList(List<Seat> seats, String fieldName){
+    public static List<Seat> validateSeatList(List<Seat> seats, String fieldName) {
         validateObjectNotNull(seats, fieldName);
 
-        if(seats.isEmpty()){
+        if (seats.isEmpty()) {
             throw new InvalidDateTimeRangeException(fieldName + " cannot be empty");
         }
 
         return List.copyOf(seats);
+    }
+
+    /**
+     * validates that a String email value is neither null nor empty and matches the email regex
+     */
+    public static String validateEmail(String email) {
+        validateNullOrEmptyString(email, "Email");
+
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+
+        if (!email.matches(emailRegex)) {
+            throw new InvalidEmailFormatException("Email format is invalid");
+        }
+
+        return email;
+    }
+
+    /**
+     * validates that a String value is neither null nor empty and matches the phone regex
+     */
+    public static String validatePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null) {
+            return null;
+        }
+
+        if (phoneNumber.isBlank()) {
+            throw new EmptyStringException("Phone Number can not be empty");
+        }
+
+        String phoneRegex = "^\\+?[0-9\\s\\-()]{7,20}$";
+        if (!phoneNumber.matches(phoneRegex)) {
+            throw new InvalidPhoneNumberFormatException("Phone Number format is invalid");
+        }
+
+        return phoneNumber;
     }
 }

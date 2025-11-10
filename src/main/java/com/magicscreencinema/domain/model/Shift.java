@@ -1,19 +1,19 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.exception.InvalidDateTimeRangeException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 import java.time.LocalDateTime;
 
 public class Shift {
-    protected LocalDateTime startTime;
-    protected LocalDateTime endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     public Shift(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime.isAfter(endTime)) throw new InvalidDateTimeRangeException("StartTime can not be bigger than EndTime");
-
-        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start time");
-        this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+        FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
     public LocalDateTime getStartTime() {
@@ -21,7 +21,9 @@ public class Shift {
     }
 
     public void setStartTime(LocalDateTime startTime) {
-        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start time");
+        FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
+        this.startTime = startTime;
     }
 
     public LocalDateTime getEndTime() {
@@ -29,6 +31,8 @@ public class Shift {
     }
 
     public void setEndTime(LocalDateTime endTime) {
-        this.endTime = FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
+        FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
+        this.endTime = endTime;
     }
 }

@@ -6,19 +6,20 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 import java.time.LocalDate;
 import java.util.Optional;
 
-public class Staff extends Person{
+public class Staff extends Person {
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
 
     private Staff manager;
 
-    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
+    public Staff(String firstName, String lastName, String phoneNumber, String email, String password,
+                 LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
         this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
-        this.manager = FieldValidator.validateObjectNotNull(manager, "Manager");
+        this.manager = FieldValidator.validateObjectRecursion(manager, this);
     }
 
     public void setHireDate(LocalDate hireDate) {

@@ -16,8 +16,8 @@ public abstract class Person {
     public Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
         this.firstName = FieldValidator.validateNullOrEmptyString(firstName, "First Name");
         this.lastName = FieldValidator.validateNullOrEmptyString(lastName, "Last Name");
-        this.phoneNumber = FieldValidator.validateNullableString(phoneNumber, "Phone Number");
-        this.email = FieldValidator.validateNullOrEmptyString(email, "Email");
+        this.phoneNumber = FieldValidator.validatePhoneNumber(phoneNumber);
+        this.email = FieldValidator.validateEmail(email);
         this.password = FieldValidator.validateNullOrEmptyString(password, "Password");
         this.birthDate = FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
     }
@@ -31,11 +31,11 @@ public abstract class Person {
     }
 
     public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = FieldValidator.validateNullableString(phoneNumber, "Phone Number");
+        this.phoneNumber = FieldValidator.validatePhoneNumber(phoneNumber);
     }
 
     public void setEmail(String email) {
-        this.email = FieldValidator.validateNullOrEmptyString(email, "Email");
+        this.email = FieldValidator.validateEmail(email);
     }
 
     public void setPassword(String password) {

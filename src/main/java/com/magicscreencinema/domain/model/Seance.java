@@ -6,10 +6,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Seance {
-    public LocalDateTime startTime;
-    public LocalDateTime endTime;
-    public boolean isCancelled;
-    public static int advertisementsTime = 20;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private boolean isCancelled;
+    private static int advertisementsTime = 20;
 
     public Movie movie;
     public Hall hall;
@@ -61,6 +61,6 @@ public class Seance {
     }
 
     public void setHall(Hall hall) {
-        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");;
+        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
     }
 }

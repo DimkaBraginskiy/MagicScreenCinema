@@ -12,12 +12,11 @@ public class Reservation {
     private UUID reservationNumber;
     private LocalDateTime reservationTime;
     private ReservationStatusEnum status;
-    private double price;
 
     private Discount discount;
     private List<Seat> seats;
 
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status,  Discount discount, List<Seat> seats) {
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Discount discount, List<Seat> seats) {
         this.reservationNumber = UUID.randomUUID();
 
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
@@ -63,7 +62,7 @@ public class Reservation {
         return seats;
     }
 
-    public double getTotalPrice(){
+    public double getTotalPrice() {
         List<Seat> seatList = Objects.requireNonNullElse(seats, List.of());
 
         double total = 0.0;

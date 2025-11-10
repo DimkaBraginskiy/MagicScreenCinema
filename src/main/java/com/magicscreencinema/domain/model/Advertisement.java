@@ -3,9 +3,9 @@ package com.magicscreencinema.domain.model;
 import com.magicscreencinema.domain.validation.FieldValidator;
 
 public class Advertisement {
-    public String name;
-    public long duration;
-    public String advertiserName;
+    private String name;
+    private long duration;
+    private String advertiserName;
 
     public Advertisement(String name, long duration, String advertiserName) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");

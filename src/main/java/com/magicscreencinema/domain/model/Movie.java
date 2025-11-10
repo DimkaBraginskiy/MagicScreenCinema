@@ -6,11 +6,11 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 import java.time.LocalDate;
 
 public class Movie {
-    public String name;
-    public AgeRestrictionEnum ageRestriction;
-    public String description;
-    public LocalDate premiereDate;
-    public long movieDuration;
+    private String name;
+    private AgeRestrictionEnum ageRestriction;
+    private String description;
+    private LocalDate premiereDate;
+    private long movieDuration;
 
     public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
@@ -59,6 +59,4 @@ public class Movie {
     public void setMovieDuration(long movieDuration) {
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
     }
-
-
 }
