@@ -133,22 +133,22 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         for (Object child : children) {
             if (child == null) continue;
 
-            UUID childId = PersistenceUtil.extractId(child);
-            List<UUID> childRelatedIds = ReferenceCollectionManagerRegistry
-                    .getManager(type, childType)
-                    .getRelatedIds(childId, true);
+            ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, childType);
 
-            if(!childRelatedIds.isEmpty() && !childRelatedIds.contains(PersistenceUtil.extractId(parent))){
-                throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() +
-                        " with id " + childId + " is already linked in a OneToMany relationship.");
-            }
+            UUID childId = PersistenceUtil.extractId(child);
 
             if (!childCollection.existsById(childId)) {
                 if(!isCascadeSave(cascade)) throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() + " with id " + childId + " does not exist.");
                 else saveChild(childCollection, child);
             }
-            ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, childType);
-            manager.saveRelation(childId, PersistenceUtil.extractId(parent));
+
+            List<UUID> childRelatedIds = manager.getRelatedIds(childId, true);
+            if(childRelatedIds.isEmpty()) {
+                manager.saveRelation(childId, PersistenceUtil.extractId(parent));
+            }
+            else{
+                manager.replaceRelation(childId, childRelatedIds.getFirst(), PersistenceUtil.extractId(parent));
+            }
         }
     }
     private void saveManyToOneRelationship(Field currentField, Object entityToSave, Object currentValue) throws IOException {
@@ -164,12 +164,11 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
         ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, currentFieldType);
         List<UUID> relatedIds = manager.getRelatedIds(PersistenceUtil.extractId(entityToSave), true);
-        if(!relatedIds.isEmpty() && !relatedIds.contains(id)){
-            throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
-                    " with id " + id + " is already linked in a ManyToOne relationship.");
-        }
 
-        manager.saveRelation(PersistenceUtil.extractId(entityToSave), PersistenceUtil.extractId(currentValue));
+        if(relatedIds.isEmpty())
+            manager.saveRelation(PersistenceUtil.extractId(entityToSave), PersistenceUtil.extractId(currentValue));
+        else
+            manager.replaceRelation(PersistenceUtil.extractId(entityToSave), relatedIds.getFirst(), id);
     }
 
     private void saveOneToOneRelationship(Field currentField, Object entityToSave, Object currentValue)
@@ -205,14 +204,12 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             dependentId = entityToSaveId;
             relatedIds = manager.getRelatedIds(entityToSaveId, false);
         }
-
-        if(!relatedIds.isEmpty() && !relatedIds.contains(idOfCurrentField)){
-            throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
-                    " with id " + idOfCurrentField + " is already linked in a OneToOne relationship.");
-        }
-
-        manager.saveRelation(ownerId, dependentId);
         if(isSave) saveChild(collection, currentValue);
+
+        if(relatedIds.isEmpty())
+            manager.saveRelation(ownerId, dependentId);
+        else
+            manager.replaceRelation(ownerId, relatedIds.getFirst(), dependentId);
     }
 
     private <C> void saveChild(ObjectCollection<C> collection, Object child) {

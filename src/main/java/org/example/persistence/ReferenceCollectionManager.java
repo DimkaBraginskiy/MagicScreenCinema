@@ -38,6 +38,21 @@ class ReferenceCollectionManager {
         Files.writeString(path, record + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
+    public void replaceRelation(UUID ownerId, UUID oldRelatedId, UUID newRelatedId) throws IOException {
+        if (!Files.exists(path)) {
+            return;
+        }
+        var lines = Files.readAllLines(path);
+        String oldRecord = ownerId + "_" + oldRelatedId;
+        String newRecord = ownerId + "_" + newRelatedId;
+
+        List<String> updatedLines = lines.stream()
+                .map(line -> line.equals(oldRecord) ? newRecord : line)
+                .collect(Collectors.toList());
+
+        Files.write(path, updatedLines, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
     public List<UUID> getRelatedIds(UUID id, boolean isOwner) throws IOException {
         if (!Files.exists(path)) {
             return List.of();
