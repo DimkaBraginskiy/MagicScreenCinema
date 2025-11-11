@@ -3,6 +3,7 @@ package org.example.persistence;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.*;
+import org.example.persistence.declaration.*;
 import org.example.persistence.exception.*;
 
 import java.io.*;

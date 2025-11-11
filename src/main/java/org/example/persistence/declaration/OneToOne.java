@@ -1,11 +1,12 @@
-package org.example.persistence;
+package org.example.persistence.declaration;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Owner {
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OneToOne {
+    Cascade[] cascade() default Cascade.NONE;
 }

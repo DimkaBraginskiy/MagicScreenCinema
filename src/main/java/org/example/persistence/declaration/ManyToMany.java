@@ -1,11 +1,13 @@
-package org.example.persistence;
+package org.example.persistence.declaration;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ManyToOne {
+@Target(ElementType.FIELD)
+public @interface ManyToMany {
+    Cascade[] cascade() default Cascade.NONE;
+    Fetch fetch() default Fetch.LAZY;
 }

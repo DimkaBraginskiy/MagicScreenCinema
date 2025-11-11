@@ -1,5 +1,7 @@
 package org.example.persistence;
 
+import org.example.persistence.declaration.ElementCollection;
+import org.example.persistence.declaration.Id;
 import org.example.persistence.exception.InvalidIdTypeException;
 import org.example.persistence.exception.MissingIdException;
 

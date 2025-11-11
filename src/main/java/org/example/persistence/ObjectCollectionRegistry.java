@@ -1,5 +1,6 @@
 package org.example.persistence;
 
+import org.example.persistence.declaration.ElementCollection;
 import org.example.persistence.exception.NotACollectionException;
 
 import java.io.IOException;

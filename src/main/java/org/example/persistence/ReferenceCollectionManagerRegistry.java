@@ -1,5 +1,7 @@
 package org.example.persistence;
 
+import org.example.persistence.declaration.ElementCollection;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
