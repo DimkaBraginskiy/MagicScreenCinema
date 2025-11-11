@@ -45,6 +45,9 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
         } catch (IOException e) {
             throw new CouldNotPersistObjectException("Could not persist object of class " + objectClass.getName(), e);
         }
+        finally {
+            PersistenceContext.removeFromContext(objectClass, id);
+        }
     }
 
     @Override

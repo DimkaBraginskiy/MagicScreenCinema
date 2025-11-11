@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ManyToMany {
     String mappedBy() default "";
+    Cascade cascade() default Cascade.NONE;
+    Fetch fetch() default Fetch.LAZY;
 }

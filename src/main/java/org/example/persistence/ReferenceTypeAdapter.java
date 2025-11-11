@@ -25,32 +25,32 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
 
     @Override
-    public void write(JsonWriter writer, T entity) throws IOException {
+    public void write(JsonWriter writer, T entityToSave) throws IOException {
         writer.beginObject();
 
-        for (Field field : type.getDeclaredFields()) {
-            field.setAccessible(true);
-            Object value;
+        for (Field currentField : type.getDeclaredFields()) {
+            currentField.setAccessible(true);
+            Object currentFieldValue;
 
             try {
-                value = field.get(entity);
+                currentFieldValue = currentField.get(entityToSave);
 
-                if (value == null) {
-                    writer.name(field.getName()).nullValue();
+                if (currentFieldValue == null) {
+                    writer.name(currentField.getName()).nullValue();
                     continue;
                 }
 
-                if (PersistenceUtil.isElementCollection(field.getType())) {
-                    writeSingleReference(writer, field, value);
-                } else if (PersistenceUtil.isCollectionOfElementCollection(field)) {
-                    writeCollectionReference(writer, field, entity, value);
+                if (PersistenceUtil.isElementCollection(currentField.getType())) {
+                    writeSingleReference(writer, currentField, entityToSave, currentFieldValue);
+                } else if (PersistenceUtil.isCollectionOfElementCollection(currentField)) {
+                    writeCollectionReference(writer, currentField, entityToSave, currentFieldValue);
                 } else {
-                    writer.name(field.getName());
-                    gson.toJson(value, field.getType(), writer);
+                    writer.name(currentField.getName());
+                    gson.toJson(currentFieldValue, currentField.getType(), writer);
                 }
 
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Could not access field " + field.getName(), e);
+                throw new RuntimeException("Could not access field " + currentField.getName(), e);
             } catch (NoSuchFieldException e) {
                 throw new FileNotFoundException("Field not found during cascade save: " + e.getMessage());
             }
@@ -59,11 +59,31 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         writer.endObject();
     }
 
-    private void writeSingleReference(JsonWriter writer, Field field, Object value) throws IOException {
-        if (field.isAnnotationPresent(ManyToOne.class)) {
-            Object id = PersistenceUtil.extractId(value);
-            writer.name(field.getName()).value(id.toString());
+    private void writeSingleReference(JsonWriter writer, Field currentField, Object entityToSave, Object currentValue) throws IOException, IllegalAccessException {
+        if (currentField.isAnnotationPresent(ManyToOne.class)) {
+            saveManyToOneRelationship(writer, currentField, currentValue);
         }
+        else if(currentField.isAnnotationPresent(OneToOne.class)){
+            saveOneToOneRelationship(writer, currentField, entityToSave, currentValue);
+        }
+    }
+
+    private Field getMappedFieldForOneToOneRelationship(Field field, Class<?> relatedType) throws FileNotFoundException {
+        String mappedBy = field.getAnnotation(OneToOne.class).mappedBy();
+        if(mappedBy == null || mappedBy.isEmpty()){
+            throw new RelationshipDeclarationException("OneToOne relationship must have ForeignKey or mappedBy defined.");
+        }
+        Field mappedField = null;
+        try {
+            mappedField = relatedType.getDeclaredField(mappedBy);
+        } catch (NoSuchFieldException e) {
+            throw new FileNotFoundException("Field " + mappedBy + " not found in class " + relatedType.getName() + ". Check mappedBy declaration.");
+        }
+        if(!mappedField.getType().equals(type)){
+            throw new RelationshipDeclarationException("MappedBy field type mismatch for " + field.getName() +
+                    ": expected " + type.getName() + ", found " + mappedField.getType().getName());
+        }
+        return mappedField;
     }
 
     private void writeCollectionReference(JsonWriter writer, Field field, Object entity, Object value)
@@ -93,19 +113,26 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         Class<?> genericType = PersistenceUtil.getGenericType(field);
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
 
-        boolean cascade = field.isAnnotationPresent(CascadeSave.class);
+        boolean cascade = field.getAnnotation(ManyToMany.class).cascade().equals(Cascade.SAVE);
         List<UUID> relatedIds = new ArrayList<>();
+
+        PersistenceContext.registerInContext(entity);
 
         for (Object item : relatedEntities) {
             if (item == null) continue;
 
             UUID relatedId = PersistenceUtil.extractId(item);
-            if (!collection.existsById(relatedId)) {
-                if (cascade) saveChild(collection, item);
-                else throw new ReferenceIntegrityException(
+            Object existingInContext = PersistenceContext.getFromContext(genericType, relatedId);
+
+            if (!collection.existsById(relatedId) && existingInContext == null && !cascade) {
+                throw new ReferenceIntegrityException(
                         "Referenced entity of type " + genericType.getName() +
                                 " with id " + relatedId + " does not exist.");
             }
+            if (cascade && existingInContext == null) {
+                saveChild(collection, item);
+            }
+
             relatedIds.add(relatedId);
         }
 
@@ -121,22 +148,26 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void saveOneToManyRelationship(Field field, Object parent, Object value)
+    private void saveOneToManyRelationship(Field currentField, Object parent, Object currentFieldValue)
             throws IllegalAccessException, NoSuchFieldException {
+        PersistenceContext.registerInContext(parent);
 
-        String mappedBy = field.getAnnotation(OneToMany.class).mappedBy();
-        Class<?> childType = PersistenceUtil.getGenericType(field);
-        Iterable<?> children = (Iterable<?>) value;
+        String mappedBy = currentField.getAnnotation(OneToMany.class).mappedBy();
+        Cascade cascade = currentField.getAnnotation(OneToMany.class).cascade();
+
+        Class<?> childType = PersistenceUtil.getGenericType(currentField);
+        Iterable<?> children = (Iterable<?>) currentFieldValue;
 
         if (children == null) return;
+
+        ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
 
         for (Object child : children) {
             if (child == null) continue;
 
             UUID childId = PersistenceUtil.extractId(child);
-            ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
 
-            if (!childCollection.existsById(childId) && !field.isAnnotationPresent(CascadeSave.class)) {
+            if (!childCollection.existsById(childId) && !cascade.equals(Cascade.SAVE)) {
                 throw new ReferenceIntegrityException(
                         "Referenced entity of type " + childType.getName() +
                                 " with id " + childId + " does not exist.");
@@ -147,12 +178,54 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
             if (!mappedField.getType().equals(type)) {
                 throw new RelationshipDeclarationException(
-                        "MappedBy field type mismatch for " + field.getName() +
+                        "MappedBy field type mismatch for " + currentField.getName() +
                                 ": expected " + type.getName() + ", found " + mappedField.getType().getName());
             }
 
             mappedField.set(child, parent);
             saveChild(childCollection, child);
+        }
+    }
+    private void saveManyToOneRelationship(JsonWriter writer, Field currentField, Object currentValue) throws IOException {
+        UUID id = PersistenceUtil.extractId(currentValue);
+        Class<?> currentFieldType = currentField.getType();
+        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(currentFieldType);
+
+        Object existing = PersistenceContext.getFromContext(currentFieldType, id);
+
+        if(!collection.existsById(id) && existing == null)
+            throw new ReferenceIntegrityException("Referenced entity of type " +
+                    currentField.getType().getName() + " with id " + id + " does not exist.");
+
+        writer.name(currentField.getName()).value(id.toString());
+    }
+
+    private void saveOneToOneRelationship(JsonWriter writer, Field currentField, Object entityToSave, Object currentValue)
+            throws IllegalAccessException, IOException {
+        UUID idOfCurrentField = PersistenceUtil.extractId(currentValue);
+        Class<?> currentFieldType = currentField.getType();
+        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(currentFieldType);
+        Cascade cascade = currentField.getAnnotation(OneToOne.class).cascade();
+
+        PersistenceContext.registerInContext(entityToSave);
+        Object existingInContext = PersistenceContext.getFromContext(currentFieldType, idOfCurrentField);
+
+        if(!collection.existsById(idOfCurrentField) && existingInContext == null && !cascade.equals(Cascade.SAVE)){
+
+            throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
+                    " with id " + idOfCurrentField + " does not exist.");
+        }
+
+        if(currentField.isAnnotationPresent(ForeignKey.class)){
+            writer.name(currentField.getName()).value(idOfCurrentField.toString());
+            if(cascade.equals(Cascade.SAVE) && existingInContext == null) saveChild(collection, currentValue);
+        }
+        else{
+            Field mappedField = getMappedFieldForOneToOneRelationship(currentField, currentFieldType);
+            mappedField.setAccessible(true);
+            mappedField.set(currentValue, entityToSave);
+            writer.name(currentField.getName()).nullValue();
+            saveChild(collection, currentValue);
         }
     }
 
@@ -268,9 +341,29 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             reader.skipValue();
             readManyToManyRelationship(field, instance, id);
         }
+        else {
+            throw new RelationshipDeclarationException(
+                    "Collection field " + field.getName() +
+                            " must have OneToMany or ManyToMany annotation.");
+        }
     }
 
     private void readSingleReference(Field field, Object instance, JsonReader reader)
+            throws IllegalAccessException {
+        if(field.isAnnotationPresent(ManyToOne.class)){
+            readManyToOneRelationship(field, instance, reader);
+        }
+        else if(field.isAnnotationPresent(OneToOne.class)){
+            readOneToOneRelationship(field, instance, reader);
+        }
+        else {
+            throw new RelationshipDeclarationException(
+                    "ElementCollection field " + field.getName() +
+                            " must have ManyToOne or OneToOne annotation.");
+        }
+    }
+
+    private void readManyToOneRelationship(Field field, Object instance, JsonReader reader)
             throws IllegalAccessException {
 
         UUID refId = gson.fromJson(reader, PersistenceUtil.findIdField(field.getType()).getType());
@@ -295,7 +388,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     private void readOneToManyRelationship(Field field, Object instance, UUID id)
             throws NoSuchFieldException, IllegalAccessException {
 
-        if (!field.isAnnotationPresent(Eager.class)) {
+        if (!field.getAnnotation(OneToMany.class).fetch().equals(Fetch.EAGER)) {
             field.set(instance, Collections.emptyList());
             return;
         }
@@ -324,7 +417,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             throws IllegalAccessException, IOException {
 
         List<Object> relatedEntities = new ArrayList<>();
-        if (!field.isAnnotationPresent(Eager.class)) {
+        if (!field.getAnnotation(ManyToMany.class).fetch().equals(Fetch.EAGER)) {
             field.set(instance, relatedEntities);
             return;
         }
@@ -355,5 +448,37 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
 
         field.set(instance, relatedEntities);
+    }
+
+    private void readOneToOneRelationship(Field field, Object instance, JsonReader reader)
+            throws IllegalAccessException{
+        if(field.isAnnotationPresent(ForeignKey.class)){
+            readManyToOneRelationship(field, instance, reader);
+        }
+        else{
+            ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
+            UUID instanceId = PersistenceUtil.extractId(instance);
+            List<?> results = collection.findAll(false);
+            Object found = null;
+            for (Object entity : results) {
+                Field mappedField;
+                try {
+                    mappedField = field.getType().getDeclaredField(field.getAnnotation(OneToOne.class).mappedBy());
+                } catch (NoSuchFieldException e) {
+                    throw new FieldNotFoundException(
+                            "Field " + field.getAnnotation(OneToOne.class).mappedBy() +
+                                    " not found in class " + field.getType().getName(), e);
+                }
+                mappedField.setAccessible(true);
+
+                Object parent = mappedField.get(entity);
+                if (parent != null && PersistenceUtil.extractId(parent).equals(instanceId)) {
+                    found = entity;
+                    PersistenceContext.registerInContext(found);
+                    break;
+                }
+            }
+            field.set(instance, found);
+        }
     }
 }

@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OneToMany {
     String mappedBy();
+    Cascade cascade() default Cascade.NONE;
+    Fetch fetch() default Fetch.LAZY;
 }

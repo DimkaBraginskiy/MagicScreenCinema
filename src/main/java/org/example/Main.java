@@ -2,10 +2,7 @@ package org.example;
 
 import org.example.persistence.ObjectCollection;
 import org.example.persistence.ObjectCollectionRegistry;
-import org.example.persistence.model.Author;
-import org.example.persistence.model.Book;
-import org.example.persistence.model.Publisher;
-import org.example.persistence.model.Rd;
+import org.example.persistence.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,47 +11,29 @@ import java.util.UUID;
 public class Main {
     public static void main(String[] args) {
         /*try {
-            ObjectCollection<Author> authorCollection = ObjectCollectionRegistry.getCollection(Author.class);
-            ObjectCollection<Book> bookCollection = ObjectCollectionRegistry.getCollection(Book.class);
-            ObjectCollection<Publisher> publisherCollection = ObjectCollectionRegistry.getCollection(Publisher.class);
+            ObjectCollection<Teacher> teacherCollection = ObjectCollectionRegistry.getCollection(Teacher.class);
+            ObjectCollection<Student> studentCollection = ObjectCollectionRegistry.getCollection(Student.class);
 
-            Author author = new Author();
-            author.setId(UUID.randomUUID());
-            author.setName("Author 1");
+            Teacher teacher = new Teacher();
+            teacher.setId(UUID.randomUUID());
+            teacher.setName("Mr. Smith");
 
-            List<Book> books = new ArrayList<>();
-            for(int i = 1; i <= 5; i++) {
-                Book book = new Book();
-                book.setId(UUID.randomUUID());
-                book.setTitle("Book " + i);
-                books.add(book);
+            List<Student> students = new ArrayList<>();
+
+            for(int i = 1; i <= 3; i++) {
+                Student student = new Student();
+                student.setId(UUID.randomUUID());
+                student.setName("Student " + i);
+
+                student.setTeacher(teacher);
+                studentCollection.save(student);
+                students.add(student);
             }
-            books.add(null);
+            teacher.setStudents(students);
+            teacherCollection.save(teacher);
 
-            author.setBooks(books);
+            System.out.println(teacherCollection.findById(teacher.getId()));
 
-            List<Publisher> publishers = new ArrayList<>();
-            for (int i = 1; i <= 3; i++) {
-                Publisher publisher = new Publisher();
-                publisher.setId(UUID.randomUUID());
-                publisher.setName("Publisher " + i);
-                publishers.add(publisher);
-            }
-
-            List<Rd> rdList = new ArrayList<>();
-            for (int i = 1; i <= 2; i++) {
-                Rd rd = new Rd("RD-" + i, i);
-                rdList.add(rd);
-            }
-
-            author.setPublishers(publishers);
-            author.setRdList(rdList);
-
-
-            authorCollection.save(author);
-
-            System.out.println(authorCollection.findById(author.getId()).orElse(null));
-            bookCollection.findAll().forEach(System.out::println);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }*/
