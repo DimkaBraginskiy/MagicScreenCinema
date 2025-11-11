@@ -10,35 +10,24 @@ import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
-        /*try {
-            ObjectCollection<Person> personCollection = ObjectCollectionRegistry.getCollection(Person.class);
-            ObjectCollection<Car> carCollection = ObjectCollectionRegistry.getCollection(Car.class);
+        /*ObjectCollection<Country> countryCollection = ObjectCollectionRegistry.getCollection(Country.class);
 
-            Person person1 = new Person();
-            person1.setId(UUID.randomUUID());
-            person1.setName("Alice");
+        Country country = new Country();
+        country.setId(UUID.randomUUID());
+        country.setName("Utopia");
 
-            List<Car> cars = new ArrayList<>();
-            for(int i = 0; i < 2; i++) {
-                Car car = new Car();
-                car.setId(UUID.randomUUID());
-                car.setModel("Model " + (i + 1));
+        Capital capital = new Capital();
+        capital.setId(UUID.randomUUID());
+        capital.setName("Utopia City");
 
-                cars.add(car);
-            }
+        Capital capital1 = new Capital();
+        capital1.setId(UUID.randomUUID());
+        capital1.setName("New Utopia City");
 
-            Person person2 = new Person();
-            person2.setId(UUID.randomUUID());
-            person2.setName("Bob");
-            person2.setCars(cars);
+        country.setCapital(capital);
+        countryCollection.save(country);
 
-            //personCollection.save(person1);
-            //personCollection.save(person2);
-
-            System.out.println(personCollection.findAll());
-            //personCollection.deleteById(UUID.fromString("40f6b52a-f268-4ac4-bde0-3e05b814958a"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }*/
+        country.setCapital(capital1);
+        countryCollection.save(country);*/
     }
 }
