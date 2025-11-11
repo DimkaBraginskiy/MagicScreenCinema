@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-class PersistenceContext {
+public class PersistenceContext {
     private final static Map<Class<?>, Map<UUID, Object>> loadedObjects = new HashMap<>();
     static void registerInContext(Object obj) {
         try {

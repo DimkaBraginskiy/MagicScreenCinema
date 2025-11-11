@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ObjectCollectionRegistry {
     private static final Map<Class<?>, ObjectCollection<?>> collections = new HashMap<>();
@@ -37,5 +38,9 @@ public class ObjectCollectionRegistry {
             }
             System.out.println("Created collection folder: " + folderPath);
         }
+    }
+
+    Set<Class<?>> getRegisteredClasses() {
+        return collections.keySet();
     }
 }

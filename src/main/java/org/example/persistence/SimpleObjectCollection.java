@@ -51,7 +51,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public Optional<T> findById(UUID id, boolean flushContext) {
+    public Optional<T> findById(UUID id) {
         Path objectPath = getObjectFilePath(id);
 
         if(Files.exists(objectPath)){
@@ -62,15 +62,10 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                 throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
             }
             finally {
-                if(flushContext) PersistenceContext.flush();
+                PersistenceContext.removeFromContext(objectClass, id);
             }
         }
         return Optional.empty();
-    }
-
-    @Override
-    public Optional<T> findById(UUID id) {
-        return findById(id, true);
     }
 
     @Override
@@ -108,13 +103,31 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public boolean deleteById(UUID id) {
+    public boolean deleteById(UUID id){
         Path objectPath = getObjectFilePath(id);
+        Field[] fields = objectClass.getDeclaredFields();
         try {
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(OneToMany.class)) {
+                    clearOneToMany(field, id);
+                }
+            }
             return Files.deleteIfExists(objectPath);
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private void clearOneToMany(Field field, UUID id) throws IOException {
+        Class<?> fieldType = PersistenceUtil.getGenericType(field);
+        ObjectCollection<?> relatedCollection = ObjectCollectionRegistry.getCollection(fieldType);
+
+        ReferenceCollectionManager referenceManager = ReferenceCollectionManagerRegistry.getManager(objectClass, fieldType);
+        List<UUID> relatedIds = referenceManager.getRelatedIds(id, false);
+        for(UUID relatedId : relatedIds){
+            relatedCollection.deleteById(relatedId);
+        }
+        referenceManager.clearRelation(id, false);
     }
 
     private Path getObjectFilePath(Object id) {

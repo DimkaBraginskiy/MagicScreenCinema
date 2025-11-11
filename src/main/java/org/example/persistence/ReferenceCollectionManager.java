@@ -6,11 +6,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-class JoinCollectionManager {
+class ReferenceCollectionManager {
     private final Path path;
 
-    public JoinCollectionManager(String name) {
+    public ReferenceCollectionManager(String name) {
         path = PersistenceConfig.resolveCollectionPath(name);
     }
 
@@ -34,25 +38,38 @@ class JoinCollectionManager {
         Files.writeString(path, record + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
-    public List<UUID> getRelatedIds(UUID ownerId) throws IOException {
+    public List<UUID> getRelatedIds(UUID id, boolean isOwner) throws IOException {
         if (!Files.exists(path)) {
             return List.of();
         }
         var lines = Files.readAllLines(path);
+        Predicate<String> filterPredicate = isOwner
+                ? line -> line.startsWith(id + "_")
+                : line -> line.endsWith("_" + id);
+
+        Function<String, UUID> mapFunction = isOwner
+                ? line -> UUID.fromString(line.substring(line.indexOf("_") + 1))
+                : line -> UUID.fromString(line.substring(0, line.indexOf("_")));
+
         return lines.stream()
-                .filter(line -> line.startsWith(ownerId + "_"))
-                .map(line -> line.substring(line.indexOf("_") + 1))
-                .map(UUID::fromString)
+                .filter(filterPredicate)
+                .map(mapFunction)
                 .toList();
     }
 
-    public void clearRelation(UUID ownerId) throws IOException {
+    private Predicate<String> getFilterPredicate(UUID id, boolean isOwner) {
+        return  isOwner
+                ? line -> line.startsWith(id + "_")
+                : line -> line.endsWith("_" + id);
+    }
+
+    public void clearRelation(UUID id, boolean isOwner) throws IOException {
         if (!Files.exists(path)) {
             return;
         }
         var lines = Files.readAllLines(path);
         var filteredLines = lines.stream()
-                .filter(line -> !line.startsWith(ownerId + "_"))
+                .filter(getFilterPredicate(id, isOwner).negate())
                 .toList();
         Files.write(path, filteredLines, StandardOpenOption.TRUNCATE_EXISTING);
     }
@@ -76,21 +93,5 @@ class JoinCollectionManager {
         var lines = Files.readAllLines(path);
         String record = ownerId + "_" + relatedId;
         return lines.stream().anyMatch(line -> line.equals(record));
-    }
-
-    public List<UUID> getRelatedIdsInverse(UUID id) {
-        try {
-            if (!Files.exists(path)) {
-                return List.of();
-            }
-            var lines = Files.readAllLines(path);
-            return lines.stream()
-                    .filter(line -> line.endsWith("_" + id))
-                    .map(line -> line.substring(0, line.indexOf("_")))
-                    .map(UUID::fromString)
-                    .toList();
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read join collection file: " + path, e);
-        }
     }
 }

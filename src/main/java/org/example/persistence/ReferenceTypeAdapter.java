@@ -14,7 +14,6 @@ import java.util.*;
  * (OneToMany, ManyToMany, etc.) and reference resolution.
  */
 class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
-
     private final Gson gson;
     private final Class<T> type;
 
@@ -22,7 +21,6 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         this.gson = gson;
         this.type = type;
     }
-
 
     @Override
     public void write(JsonWriter writer, T entityToSave) throws IOException {
@@ -41,9 +39,11 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                 }
 
                 if (PersistenceUtil.isElementCollection(currentField.getType())) {
-                    writeSingleReference(writer, currentField, entityToSave, currentFieldValue);
+                    writeSingleReference(currentField, entityToSave, currentFieldValue);
+                    writer.name(currentField.getName()).nullValue();
                 } else if (PersistenceUtil.isCollectionOfElementCollection(currentField)) {
-                    writeCollectionReference(writer, currentField, entityToSave, currentFieldValue);
+                    writeCollectionReference(currentField, entityToSave, currentFieldValue);
+                    writeEmptyArray(writer, currentField.getName());
                 } else {
                     writer.name(currentField.getName());
                     gson.toJson(currentFieldValue, currentField.getType(), writer);
@@ -59,42 +59,22 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         writer.endObject();
     }
 
-    private void writeSingleReference(JsonWriter writer, Field currentField, Object entityToSave, Object currentValue) throws IOException, IllegalAccessException {
+    private void writeSingleReference(Field currentField, Object entityToSave, Object currentValue) throws IOException, IllegalAccessException {
         if (currentField.isAnnotationPresent(ManyToOne.class)) {
-            saveManyToOneRelationship(writer, currentField, currentValue);
+            saveManyToOneRelationship(currentField,entityToSave, currentValue);
         }
         else if(currentField.isAnnotationPresent(OneToOne.class)){
-            saveOneToOneRelationship(writer, currentField, entityToSave, currentValue);
+            saveOneToOneRelationship(currentField, entityToSave, currentValue);
         }
     }
 
-    private Field getMappedFieldForOneToOneRelationship(Field field, Class<?> relatedType) throws FileNotFoundException {
-        String mappedBy = field.getAnnotation(OneToOne.class).mappedBy();
-        if(mappedBy == null || mappedBy.isEmpty()){
-            throw new RelationshipDeclarationException("OneToOne relationship must have ForeignKey or mappedBy defined.");
-        }
-        Field mappedField = null;
-        try {
-            mappedField = relatedType.getDeclaredField(mappedBy);
-        } catch (NoSuchFieldException e) {
-            throw new FileNotFoundException("Field " + mappedBy + " not found in class " + relatedType.getName() + ". Check mappedBy declaration.");
-        }
-        if(!mappedField.getType().equals(type)){
-            throw new RelationshipDeclarationException("MappedBy field type mismatch for " + field.getName() +
-                    ": expected " + type.getName() + ", found " + mappedField.getType().getName());
-        }
-        return mappedField;
-    }
-
-    private void writeCollectionReference(JsonWriter writer, Field field, Object entity, Object value)
+    private void writeCollectionReference(Field field, Object entity, Object value)
             throws IllegalAccessException, NoSuchFieldException, IOException {
 
         if (field.isAnnotationPresent(OneToMany.class)) {
             saveOneToManyRelationship(field, entity, value);
-            writeEmptyArray(writer, field.getName());
         } else if (field.isAnnotationPresent(ManyToMany.class)) {
             saveManyToManyRelationship(field, entity, value);
-            writeEmptyArray(writer, field.getName());
         }
     }
 
@@ -106,7 +86,6 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
     private void saveManyToManyRelationship(Field field, Object entity, Object value)
             throws IOException {
-
         Collection<?> relatedEntities = (Collection<?>) value;
         if (relatedEntities == null) return;
 
@@ -125,68 +104,53 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             Object existingInContext = PersistenceContext.getFromContext(genericType, relatedId);
 
             if (!collection.existsById(relatedId) && existingInContext == null && !cascade) {
-                throw new ReferenceIntegrityException(
-                        "Referenced entity of type " + genericType.getName() +
-                                " with id " + relatedId + " does not exist.");
+                throw new ReferenceIntegrityException("Referenced entity of type " + genericType.getName() + " with id " + relatedId + " does not exist.");
             }
-            if (cascade && existingInContext == null) {
-                saveChild(collection, item);
-            }
-
+            if (cascade && existingInContext == null) saveChild(collection, item);
             relatedIds.add(relatedId);
         }
 
-        JoinCollectionManager manager;
-        if (field.isAnnotationPresent(JoinCollection.class)) {
-            manager = getCollectionManager(field);
+        ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, genericType);;
+        if (field.isAnnotationPresent(Owner.class)) {
             manager.saveRelations(PersistenceUtil.extractId(entity), relatedIds);
         } else {
-            String mappedBy = field.getAnnotation(ManyToMany.class).mappedBy();
-            Field mappedField = validateManyToManyMappedField(mappedBy, genericType);
-            manager = getCollectionManager(mappedField);
             manager.saveRelationsInverse(relatedIds, PersistenceUtil.extractId(entity));
         }
     }
 
-    private void saveOneToManyRelationship(Field currentField, Object parent, Object currentFieldValue)
-            throws IllegalAccessException, NoSuchFieldException {
+    private void saveOneToManyRelationship(Field currentField, Object parent, Object currentFieldValue) throws IOException {
         PersistenceContext.registerInContext(parent);
 
-        String mappedBy = currentField.getAnnotation(OneToMany.class).mappedBy();
         Cascade cascade = currentField.getAnnotation(OneToMany.class).cascade();
 
         Class<?> childType = PersistenceUtil.getGenericType(currentField);
+        ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
         Iterable<?> children = (Iterable<?>) currentFieldValue;
 
         if (children == null) return;
-
-        ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
 
         for (Object child : children) {
             if (child == null) continue;
 
             UUID childId = PersistenceUtil.extractId(child);
+            List<UUID> childRelatedIds = ReferenceCollectionManagerRegistry
+                    .getManager(type, childType)
+                    .getRelatedIds(childId, true);
 
-            if (!childCollection.existsById(childId) && !cascade.equals(Cascade.SAVE)) {
-                throw new ReferenceIntegrityException(
-                        "Referenced entity of type " + childType.getName() +
-                                " with id " + childId + " does not exist.");
+            if(!childRelatedIds.isEmpty() && !childRelatedIds.contains(PersistenceUtil.extractId(parent))){
+                throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() +
+                        " with id " + childId + " is already linked in a OneToMany relationship.");
             }
 
-            Field mappedField = child.getClass().getDeclaredField(mappedBy);
-            mappedField.setAccessible(true);
-
-            if (!mappedField.getType().equals(type)) {
-                throw new RelationshipDeclarationException(
-                        "MappedBy field type mismatch for " + currentField.getName() +
-                                ": expected " + type.getName() + ", found " + mappedField.getType().getName());
+            if (!childCollection.existsById(childId)) {
+                if(!cascade.equals(Cascade.SAVE)) throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() + " with id " + childId + " does not exist.");
+                else saveChild(childCollection, child);
             }
-
-            mappedField.set(child, parent);
-            saveChild(childCollection, child);
+            ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, childType);
+            manager.saveRelation(childId, PersistenceUtil.extractId(parent));
         }
     }
-    private void saveManyToOneRelationship(JsonWriter writer, Field currentField, Object currentValue) throws IOException {
+    private void saveManyToOneRelationship(Field currentField, Object entityToSave, Object currentValue) throws IOException {
         UUID id = PersistenceUtil.extractId(currentValue);
         Class<?> currentFieldType = currentField.getType();
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(currentFieldType);
@@ -197,12 +161,23 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             throw new ReferenceIntegrityException("Referenced entity of type " +
                     currentField.getType().getName() + " with id " + id + " does not exist.");
 
-        writer.name(currentField.getName()).value(id.toString());
+        ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, currentFieldType);
+        List<UUID> relatedIds = manager.getRelatedIds(PersistenceUtil.extractId(entityToSave), true);
+        if(!relatedIds.isEmpty() && !relatedIds.contains(id)){
+            throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
+                    " with id " + id + " is already linked in a ManyToOne relationship.");
+        }
+
+        manager.saveRelation(PersistenceUtil.extractId(entityToSave), PersistenceUtil.extractId(currentValue));
     }
 
-    private void saveOneToOneRelationship(JsonWriter writer, Field currentField, Object entityToSave, Object currentValue)
-            throws IllegalAccessException, IOException {
+    private void saveOneToOneRelationship(Field currentField, Object entityToSave, Object currentValue)
+            throws IOException {
         UUID idOfCurrentField = PersistenceUtil.extractId(currentValue);
+        UUID entityToSaveId = PersistenceUtil.extractId(entityToSave);
+        UUID ownerId;
+        UUID dependentId;
+
         Class<?> currentFieldType = currentField.getType();
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(currentFieldType);
         Cascade cascade = currentField.getAnnotation(OneToOne.class).cascade();
@@ -211,63 +186,35 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         Object existingInContext = PersistenceContext.getFromContext(currentFieldType, idOfCurrentField);
 
         if(!collection.existsById(idOfCurrentField) && existingInContext == null && !cascade.equals(Cascade.SAVE)){
-
             throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
                     " with id " + idOfCurrentField + " does not exist.");
         }
 
-        if(currentField.isAnnotationPresent(ForeignKey.class)){
-            writer.name(currentField.getName()).value(idOfCurrentField.toString());
-            if(cascade.equals(Cascade.SAVE) && existingInContext == null) saveChild(collection, currentValue);
+        List<UUID> relatedIds;
+        ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, currentFieldType);
+
+        if(currentField.isAnnotationPresent(Owner.class)) {
+            ownerId = entityToSaveId;
+            dependentId = idOfCurrentField;
+            relatedIds = manager.getRelatedIds(entityToSaveId, true);
         }
-        else{
-            Field mappedField = getMappedFieldForOneToOneRelationship(currentField, currentFieldType);
-            mappedField.setAccessible(true);
-            mappedField.set(currentValue, entityToSave);
-            writer.name(currentField.getName()).nullValue();
-            saveChild(collection, currentValue);
+        else {
+            ownerId = idOfCurrentField;
+            dependentId = entityToSaveId;
+            relatedIds = manager.getRelatedIds(entityToSaveId, false);
         }
+
+        if(!relatedIds.isEmpty() && !relatedIds.contains(idOfCurrentField)){
+            throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
+                    " with id " + idOfCurrentField + " is already linked in a OneToOne relationship.");
+        }
+
+        manager.saveRelation(ownerId, dependentId);
+        if(cascade.equals(Cascade.SAVE) && existingInContext == null) saveChild(collection, currentValue);
     }
 
     private <C> void saveChild(ObjectCollection<C> collection, Object child) {
         collection.save((C) child);
-    }
-
-    private static JoinCollectionManager getCollectionManager(Field field) {
-        JoinCollection joinCollection = field.getAnnotation(JoinCollection.class);
-        if (joinCollection == null || joinCollection.name().isEmpty()) {
-            throw new RelationshipDeclarationException(
-                    "JoinCollection annotation must define name, joinAttribute, and inverseJoinAttribute.");
-        }
-        return JoinCollectionManagerRegistry.getManager(joinCollection.name());
-    }
-
-    private Field validateManyToManyMappedField(String mappedBy, Class<?> genericType) {
-        if (mappedBy.isEmpty()) {
-            throw new RelationshipDeclarationException(
-                    "ManyToMany relationship must have JoinCollection or mappedBy defined.");
-        }
-
-        Field mappedField;
-        try {
-            mappedField = genericType.getDeclaredField(mappedBy);
-        } catch (NoSuchFieldException e) {
-            throw new FieldNotFoundException(
-                    "Field " + mappedBy + " not found in class " + type.getName(), e);
-        }
-
-        if (!Objects.equals(PersistenceUtil.getGenericType(mappedField), type) ||
-                mappedField.getAnnotation(ManyToMany.class) == null) {
-            throw new RelationshipDeclarationException(
-                    "Improperly declared ManyToMany relationship on field " + mappedField.getName());
-        }
-
-        if (!mappedField.isAnnotationPresent(JoinCollection.class)) {
-            throw new RelationshipDeclarationException(
-                    "Field " + mappedField.getName() + " must have JoinCollection annotation.");
-        }
-
-        return mappedField;
     }
 
     @Override
@@ -278,7 +225,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
 
         T instance = createInstance();
-        UUID id = null;
+        UUID instanceId = null;
         Field idField = PersistenceUtil.findIdField(type);
 
         reader.beginObject();
@@ -295,16 +242,18 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                 field.setAccessible(true);
 
                 if (field.equals(idField)) {
-                    id = gson.fromJson(reader, field.getType());
-                    field.set(instance, id);
-                    PersistenceContext.registerSubContext(type, id, instance);
+                    instanceId = gson.fromJson(reader, field.getType());
+                    field.set(instance, instanceId);
+                    PersistenceContext.registerSubContext(type, instanceId, instance);
                     continue;
                 }
 
                 if (PersistenceUtil.isElementCollection(field.getType())) {
-                    readSingleReference(field, instance, reader);
+                    readSingleReference(field, instance, instanceId);
+                    reader.skipValue();
                 } else if (PersistenceUtil.isCollectionOfElementCollection(field)) {
-                    handleCollectionReference(field, instance, id, reader);
+                    readCollectionReference(field, instance, instanceId);
+                    reader.skipValue();
                 } else {
                     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(field.getGenericType()));
                     field.set(instance, adapter.read(reader));
@@ -331,14 +280,12 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void handleCollectionReference(Field field, Object instance, UUID id, JsonReader reader)
+    private void readCollectionReference(Field field, Object instance, UUID id)
             throws IOException, IllegalAccessException, NoSuchFieldException {
 
         if (field.isAnnotationPresent(OneToMany.class)) {
             readOneToManyRelationship(field, instance, id);
-            reader.skipValue();
         } else if (field.isAnnotationPresent(ManyToMany.class)) {
-            reader.skipValue();
             readManyToManyRelationship(field, instance, id);
         }
         else {
@@ -348,13 +295,13 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void readSingleReference(Field field, Object instance, JsonReader reader)
-            throws IllegalAccessException {
+    private void readSingleReference(Field field, Object instance, UUID instanceId)
+            throws IllegalAccessException, IOException {
         if(field.isAnnotationPresent(ManyToOne.class)){
-            readManyToOneRelationship(field, instance, reader);
+            readManyToOneRelationship(field, instance, instanceId);
         }
         else if(field.isAnnotationPresent(OneToOne.class)){
-            readOneToOneRelationship(field, instance, reader);
+            readOneToOneRelationship(field, instance, instanceId, field.isAnnotationPresent(Owner.class));
         }
         else {
             throw new RelationshipDeclarationException(
@@ -363,31 +310,12 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void readManyToOneRelationship(Field field, Object instance, JsonReader reader)
-            throws IllegalAccessException {
-
-        UUID refId = gson.fromJson(reader, PersistenceUtil.findIdField(field.getType()).getType());
-        if (refId == null) {
-            field.set(instance, null);
-            return;
-        }
-
-        Object existing = PersistenceContext.getFromContext(field.getType(), refId);
-        if (existing != null) {
-            field.set(instance, existing);
-            return;
-        }
-
-        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
-        Object ref = collection.findById(refId, false).orElse(null);
-
-        if (ref != null) PersistenceContext.registerInContext(ref);
-        field.set(instance, ref);
+    private void readManyToOneRelationship(Field field, Object instance, UUID instanceId) throws IllegalAccessException, IOException {
+        readOneToOneRelationship(field, instance, instanceId, true);
     }
 
-    private void readOneToManyRelationship(Field field, Object instance, UUID id)
-            throws NoSuchFieldException, IllegalAccessException {
-
+    private void readOneToManyRelationship(Field field, Object instance, UUID instanceId)
+            throws IllegalAccessException, IOException {
         if (!field.getAnnotation(OneToMany.class).fetch().equals(Fetch.EAGER)) {
             field.set(instance, Collections.emptyList());
             return;
@@ -399,23 +327,17 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
         List<Object> children = new ArrayList<>();
 
-        for (Object child : collection.findAll(false)) {
-            Field mappedField = genericType.getDeclaredField(field.getAnnotation(OneToMany.class).mappedBy());
-            mappedField.setAccessible(true);
+        List<UUID> childrenIds = ReferenceCollectionManagerRegistry.getManager(type, genericType)
+                .getRelatedIds(instanceId, false);
 
-            Object parent = mappedField.get(child);
-            if (parent != null && PersistenceUtil.extractId(parent).equals(id)) {
-                children.add(child);
-                PersistenceContext.registerInContext(child);
-            }
+        for(UUID childId : childrenIds){
+            collection.findById(childId).ifPresent(children::add);
         }
 
         field.set(instance, children);
     }
 
-    private void readManyToManyRelationship(Field field, Object instance, UUID id)
-            throws IllegalAccessException, IOException {
-
+    private void readManyToManyRelationship(Field field, Object instance, UUID id) throws IllegalAccessException, IOException {
         List<Object> relatedEntities = new ArrayList<>();
         if (!field.getAnnotation(ManyToMany.class).fetch().equals(Fetch.EAGER)) {
             field.set(instance, relatedEntities);
@@ -423,17 +345,13 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
 
         Class<?> genericType = PersistenceUtil.getGenericType(field);
-        JoinCollectionManager manager;
+        ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, genericType);
         List<UUID> relatedIds;
 
-        if (field.isAnnotationPresent(JoinCollection.class)) {
-            manager = getCollectionManager(field);
-            relatedIds = manager.getRelatedIds(id);
+        if (field.isAnnotationPresent(Owner.class)) {
+            relatedIds = manager.getRelatedIds(id, true);
         } else {
-            String mappedBy = field.getAnnotation(ManyToMany.class).mappedBy();
-            Field mappedField = validateManyToManyMappedField(mappedBy, genericType);
-            manager = getCollectionManager(mappedField);
-            relatedIds = manager.getRelatedIdsInverse(id);
+            relatedIds = manager.getRelatedIds(id, false);
         }
 
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
@@ -441,7 +359,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         for (UUID relatedId : relatedIds) {
             Object relatedEntity = PersistenceContext.getFromContext(genericType, relatedId);
             if (relatedEntity == null) {
-                relatedEntity = collection.findById(relatedId, false).orElse(null);
+                relatedEntity = collection.findById(relatedId).orElse(null);
                 if (relatedEntity != null) PersistenceContext.registerInContext(relatedEntity);
             }
             if (relatedEntity != null) relatedEntities.add(relatedEntity);
@@ -450,35 +368,27 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         field.set(instance, relatedEntities);
     }
 
-    private void readOneToOneRelationship(Field field, Object instance, JsonReader reader)
-            throws IllegalAccessException{
-        if(field.isAnnotationPresent(ForeignKey.class)){
-            readManyToOneRelationship(field, instance, reader);
+    private void readOneToOneRelationship(Field field, Object instance, UUID instanceId, boolean isOwner)
+            throws IllegalAccessException, IOException {
+        ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, field.getType());
+        List<UUID> relatedIds = manager.getRelatedIds(instanceId, isOwner);
+        if(relatedIds.isEmpty()){
+            field.set(instance, null);
+            return;
         }
-        else{
-            ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
-            UUID instanceId = PersistenceUtil.extractId(instance);
-            List<?> results = collection.findAll(false);
-            Object found = null;
-            for (Object entity : results) {
-                Field mappedField;
-                try {
-                    mappedField = field.getType().getDeclaredField(field.getAnnotation(OneToOne.class).mappedBy());
-                } catch (NoSuchFieldException e) {
-                    throw new FieldNotFoundException(
-                            "Field " + field.getAnnotation(OneToOne.class).mappedBy() +
-                                    " not found in class " + field.getType().getName(), e);
-                }
-                mappedField.setAccessible(true);
 
-                Object parent = mappedField.get(entity);
-                if (parent != null && PersistenceUtil.extractId(parent).equals(instanceId)) {
-                    found = entity;
-                    PersistenceContext.registerInContext(found);
-                    break;
-                }
-            }
-            field.set(instance, found);
+        UUID refId = relatedIds.getFirst();
+        ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(field.getType());
+        Object existing = PersistenceContext.getFromContext(field.getType(), refId);
+
+        if (existing != null) {
+            field.set(instance, existing);
+            return;
         }
+
+        Object found = collection.findById(refId).orElse(null);
+        if (found != null) PersistenceContext.registerInContext(found);
+
+        field.set(instance, found);
     }
 }
