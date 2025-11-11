@@ -108,26 +108,46 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
         Field[] fields = objectClass.getDeclaredFields();
         try {
             for (Field field : fields) {
+                boolean isCascade = false;
                 if (field.isAnnotationPresent(OneToMany.class)) {
-                    clearOneToMany(field, id);
+                    isCascade = Arrays.stream(field.getAnnotation(OneToMany.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
                 }
+                else if(field.isAnnotationPresent(ManyToMany.class)){
+                    isCascade = Arrays.stream(field.getAnnotation(ManyToMany.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
+                }
+                else if(field.isAnnotationPresent(OneToOne.class)){
+                    isCascade = Arrays.stream(field.getAnnotation(OneToOne.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
+                }
+                if(isCascade) handleCascade(field, id);
             }
+            clearAllRelations(id);
             return Files.deleteIfExists(objectPath);
         } catch (IOException e) {
             return false;
         }
     }
 
-    private void clearOneToMany(Field field, UUID id) throws IOException {
+    private void handleCascade(Field field, UUID id) throws IOException {
         Class<?> fieldType = PersistenceUtil.getGenericType(field);
         ObjectCollection<?> relatedCollection = ObjectCollectionRegistry.getCollection(fieldType);
 
         ReferenceCollectionManager referenceManager = ReferenceCollectionManagerRegistry.getManager(objectClass, fieldType);
-        List<UUID> relatedIds = referenceManager.getRelatedIds(id, false);
-        for(UUID relatedId : relatedIds){
+        List<UUID> relatedIds = new ArrayList<>(referenceManager.getRelatedIds(id, false));
+        relatedIds.addAll(referenceManager.getRelatedIds(id, true));
+
+        for (UUID relatedId : relatedIds) {
             relatedCollection.deleteById(relatedId);
         }
-        referenceManager.clearRelation(id, false);
+    }
+
+    private void clearAllRelations(UUID id) throws IOException {
+        Set<Class<?>> registeredClasses = ObjectCollectionRegistry.getRegisteredClasses();
+        for (Class<?> clazz : registeredClasses) {
+            ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(objectClass, clazz);
+
+            manager.clearRelation(id, true);
+            manager.clearRelation(id, false);
+        }
     }
 
     private Path getObjectFilePath(Object id) {

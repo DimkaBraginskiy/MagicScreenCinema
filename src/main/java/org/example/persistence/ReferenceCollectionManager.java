@@ -74,18 +74,6 @@ class ReferenceCollectionManager {
         Files.write(path, filteredLines, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    public void deleteRelation(UUID ownerId, UUID relatedId) throws IOException {
-        if (!Files.exists(path)) {
-            return;
-        }
-        var lines = Files.readAllLines(path);
-        String recordToDelete = ownerId + "_" + relatedId;
-        var filteredLines = lines.stream()
-                .filter(line -> !line.equals(recordToDelete))
-                .toList();
-        Files.write(path, filteredLines, StandardOpenOption.TRUNCATE_EXISTING);
-    }
-
     public boolean existsById(UUID ownerId, UUID relatedId) throws IOException {
         if (!Files.exists(path)) {
             return false;

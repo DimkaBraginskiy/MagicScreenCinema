@@ -92,7 +92,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         Class<?> genericType = PersistenceUtil.getGenericType(field);
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
 
-        boolean cascade = field.getAnnotation(ManyToMany.class).cascade().equals(Cascade.SAVE);
+        boolean cascade = isCascadeSave(field.getAnnotation(ManyToMany.class).cascade());
         List<UUID> relatedIds = new ArrayList<>();
 
         PersistenceContext.registerInContext(entity);
@@ -121,7 +121,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     private void saveOneToManyRelationship(Field currentField, Object parent, Object currentFieldValue) throws IOException {
         PersistenceContext.registerInContext(parent);
 
-        Cascade cascade = currentField.getAnnotation(OneToMany.class).cascade();
+        Cascade[] cascade = currentField.getAnnotation(OneToMany.class).cascade();
 
         Class<?> childType = PersistenceUtil.getGenericType(currentField);
         ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
@@ -143,7 +143,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             }
 
             if (!childCollection.existsById(childId)) {
-                if(!cascade.equals(Cascade.SAVE)) throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() + " with id " + childId + " does not exist.");
+                if(!isCascadeSave(cascade)) throw new ReferenceIntegrityException("Referenced entity of type " + childType.getName() + " with id " + childId + " does not exist.");
                 else saveChild(childCollection, child);
             }
             ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, childType);
@@ -180,12 +180,13 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
         Class<?> currentFieldType = currentField.getType();
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(currentFieldType);
-        Cascade cascade = currentField.getAnnotation(OneToOne.class).cascade();
+        Cascade[] cascade = currentField.getAnnotation(OneToOne.class).cascade();
+        boolean isSave = isCascadeSave(cascade);
 
         PersistenceContext.registerInContext(entityToSave);
         Object existingInContext = PersistenceContext.getFromContext(currentFieldType, idOfCurrentField);
 
-        if(!collection.existsById(idOfCurrentField) && existingInContext == null && !cascade.equals(Cascade.SAVE)){
+        if(!collection.existsById(idOfCurrentField) && existingInContext == null && !isSave){
             throw new ReferenceIntegrityException("Referenced entity of type " + currentFieldType.getName() +
                     " with id " + idOfCurrentField + " does not exist.");
         }
@@ -210,7 +211,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
 
         manager.saveRelation(ownerId, dependentId);
-        if(cascade.equals(Cascade.SAVE) && existingInContext == null) saveChild(collection, currentValue);
+        if(isSave) saveChild(collection, currentValue);
     }
 
     private <C> void saveChild(ObjectCollection<C> collection, Object child) {
@@ -390,5 +391,9 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         if (found != null) PersistenceContext.registerInContext(found);
 
         field.set(instance, found);
+    }
+
+    private boolean isCascadeSave(Cascade[] cascade){
+        return Arrays.stream(cascade).anyMatch(c -> c == Cascade.SAVE);
     }
 }

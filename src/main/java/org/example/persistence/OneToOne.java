@@ -8,6 +8,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OneToOne {
-    String mappedBy() default "";
-    Cascade cascade() default Cascade.NONE;
+    Cascade[] cascade() default Cascade.NONE;
 }

@@ -40,7 +40,7 @@ public class ObjectCollectionRegistry {
         }
     }
 
-    Set<Class<?>> getRegisteredClasses() {
+    static Set<Class<?>> getRegisteredClasses() {
         return collections.keySet();
     }
 }

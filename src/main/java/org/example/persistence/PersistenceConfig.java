@@ -26,7 +26,7 @@ class PersistenceConfig {
         DATABASE_PATH = Path.of(props.getProperty("database.path", "db")).toAbsolutePath();
     }
 
-    public static Path resolveCollectionPath(String collectionName) {
+    static Path resolveCollectionPath(String collectionName) {
         return DATABASE_PATH.resolve(collectionName);
     }
 }

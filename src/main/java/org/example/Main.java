@@ -2,7 +2,6 @@ package org.example;
 
 import org.example.persistence.ObjectCollection;
 import org.example.persistence.ObjectCollectionRegistry;
-import org.example.persistence.PersistenceContext;
 import org.example.persistence.model.*;
 
 import java.util.ArrayList;
@@ -12,30 +11,32 @@ import java.util.UUID;
 public class Main {
     public static void main(String[] args) {
         /*try {
-            ObjectCollection<Teacher> objectCollection = ObjectCollectionRegistry.getCollection(Teacher.class);
-            Teacher teacher = new Teacher();
-            teacher.setId(UUID.randomUUID());
-            teacher.setName("Mr. Smith");
+            ObjectCollection<Person> personCollection = ObjectCollectionRegistry.getCollection(Person.class);
+            ObjectCollection<Car> carCollection = ObjectCollectionRegistry.getCollection(Car.class);
 
-            List<Student> students = new ArrayList<>();
-            for (int i = 1; i <= 3; i++) {
-                Student student = new Student();
-                student.setId(UUID.randomUUID());
-                student.setName("Student " + i);
-                students.add(student);
+            Person person1 = new Person();
+            person1.setId(UUID.randomUUID());
+            person1.setName("Alice");
+
+            List<Car> cars = new ArrayList<>();
+            for(int i = 0; i < 2; i++) {
+                Car car = new Car();
+                car.setId(UUID.randomUUID());
+                car.setModel("Model " + (i + 1));
+
+                cars.add(car);
             }
 
-            teacher.setStudents(students);
-            //objectCollection.save(teacher);
+            Person person2 = new Person();
+            person2.setId(UUID.randomUUID());
+            person2.setName("Bob");
+            person2.setCars(cars);
 
-            Teacher teacher1 = new Teacher();
-            teacher1.setId(UUID.randomUUID());
-            teacher1.setName("Ms. Johnson");
-            teacher1.setStudents(students);
-            //objectCollection.save(teacher1);
+            //personCollection.save(person1);
+            //personCollection.save(person2);
 
-            objectCollection.deleteById(UUID.fromString("d5b8093c-2c05-49bd-bd83-55fd190de9b2"));
-            PersistenceContext.printContext();
+            System.out.println(personCollection.findAll());
+            //personCollection.deleteById(UUID.fromString("40f6b52a-f268-4ac4-bde0-3e05b814958a"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }*/
