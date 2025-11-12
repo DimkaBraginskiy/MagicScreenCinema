@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 class ReferenceCollectionManager {
     private final Path path;
@@ -47,7 +46,7 @@ class ReferenceCollectionManager {
 
         List<String> updatedLines = lines.stream()
                 .map(line -> line.equals(oldRecord) ? newRecord : line)
-                .collect(Collectors.toList());
+                .toList();
 
         Files.write(path, updatedLines, StandardOpenOption.TRUNCATE_EXISTING);
     }
