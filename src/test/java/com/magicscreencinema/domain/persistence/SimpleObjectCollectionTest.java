@@ -6,7 +6,6 @@ import com.magicscreencinema.persistence.ObjectCollection;
 import com.magicscreencinema.persistence.ObjectCollectionRegistry;
 import com.magicscreencinema.persistence.exception.CouldNotPersistObjectException;
 import com.magicscreencinema.persistence.exception.CouldNotReadObjectException;
-import com.magicscreencinema.persistence.exception.FieldNotFoundException;
 import com.magicscreencinema.persistence.exception.MissingNoArgsConstructorException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
