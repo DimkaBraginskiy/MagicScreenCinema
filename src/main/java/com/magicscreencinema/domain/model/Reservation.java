@@ -13,7 +13,6 @@ import java.util.UUID;
 @ElementCollection(name = "reservations")
 public class Reservation {
     @Id
-    private UUID id;
     private UUID reservationNumber;
     private LocalDateTime reservationTime;
     private ReservationStatusEnum status;
@@ -33,7 +32,7 @@ public class Reservation {
         this.seats = FieldValidator.validateSeatList(seats, "Seats");
     }
 
-    public Reservation() {
+    private Reservation() {
     }
 
     public void setReservationTime(LocalDateTime reservationTime) {

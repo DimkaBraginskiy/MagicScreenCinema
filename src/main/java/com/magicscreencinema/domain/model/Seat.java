@@ -24,9 +24,10 @@ public class Seat {
 
         if (row > hall.getMaxRow()) throw new InvalidRowException("Seat row exceeds hall max rows.");
         this.row = FieldValidator.validatePositiveNumber(row, "Row");
+        id = UUID.randomUUID();
     }
 
-    public Seat() {
+    private Seat() {
     }
 
     public int getSeatNumber() {
@@ -71,9 +72,5 @@ public class Seat {
 
     public UUID getId() {
         return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 }

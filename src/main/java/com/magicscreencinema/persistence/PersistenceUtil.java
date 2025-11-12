@@ -16,13 +16,10 @@ class PersistenceUtil {
         if (entity == null) {
             throw new MissingIdException("The provided entity is null");
         }
-        var clazz = entity.getClass();
-        for (var field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Id.class)) {
-                return extractId(entity, field);
-            }
-        }
-        throw new MissingIdException("No field with @Id annotation found in class " + clazz.getName());
+
+        Class<?> clazz = entity.getClass();
+        Field idField = findIdField(clazz);
+        return extractId(entity, idField);
     }
 
     public static UUID extractId(Object entity, Field idField) {

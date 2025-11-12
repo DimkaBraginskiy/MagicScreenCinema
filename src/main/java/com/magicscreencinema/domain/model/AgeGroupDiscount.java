@@ -17,9 +17,10 @@ public class AgeGroupDiscount {
     public AgeGroupDiscount(String description, AgeGroupEnum group) {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
         this.group = FieldValidator.validateObjectNotNull(group, "Group");
+        id = UUID.randomUUID();
     }
 
-    public AgeGroupDiscount() {
+    private AgeGroupDiscount() {
     }
 
     public void setDescription(String description) {
@@ -36,5 +37,9 @@ public class AgeGroupDiscount {
 
     public AgeGroupEnum getGroup() {
         return group;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

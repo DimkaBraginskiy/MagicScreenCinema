@@ -16,9 +16,10 @@ public class RegularDiscount {
 
     public RegularDiscount(List<DayOfWeek> dayOfWeek) {
         this.dayOfWeek = FieldValidator.validateDayOfWeekList(dayOfWeek, "Day Of Week List");
+        id = UUID.randomUUID();
     }
 
-    public RegularDiscount() {
+    private RegularDiscount() {
     }
 
     public void setDayOfWeek(List<DayOfWeek> dayOfWeek) {
@@ -27,5 +28,9 @@ public class RegularDiscount {
 
     public List<DayOfWeek> getDayOfWeek() {
         return dayOfWeek;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

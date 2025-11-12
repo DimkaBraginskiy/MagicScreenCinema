@@ -20,9 +20,10 @@ public class Shift {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
         this.startTime = startTime;
         this.endTime = endTime;
+        id = UUID.randomUUID();
     }
 
-    public Shift() {
+    private Shift() {
     }
 
     public LocalDateTime getStartTime() {
@@ -43,5 +44,9 @@ public class Shift {
         FieldValidator.validateDateTimeNotInThePast(endTime, "End Time");
         FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
         this.endTime = endTime;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

@@ -13,8 +13,6 @@ import java.util.UUID;
 
 @ElementCollection(name = "staffs")
 public class Staff extends Person {
-    @Id
-    private UUID id;
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
@@ -33,6 +31,8 @@ public class Staff extends Person {
 
     public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
+    }
+    private Staff() {
     }
 
     public void setHireDate(LocalDate hireDate) {

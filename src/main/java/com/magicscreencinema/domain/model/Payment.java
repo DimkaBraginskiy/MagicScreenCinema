@@ -20,9 +20,10 @@ public class Payment {
         this.paymentMethod = FieldValidator.validateObjectNotNull(paymentMethod, "Payment Method");
         this.paymentStatus = FieldValidator.validateObjectNotNull(paymentStatus, "Payment Status");
         this.transactionId = FieldValidator.validateNullOrEmptyString(transactionId, "Transaction ID");
+        id = UUID.randomUUID();
     }
 
-    public Payment() {
+    private Payment() {
     }
 
     public PaymentMethodEnum getPaymentMethod() {
@@ -47,5 +48,9 @@ public class Payment {
 
     public void setTransactionId(String transactionId) {
         this.transactionId = FieldValidator.validateNullOrEmptyString(transactionId, "Transaction ID");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

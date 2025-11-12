@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 class SimpleObjectCollection<T> implements ObjectCollection<T> {
@@ -29,6 +31,8 @@ class SimpleObjectCollection<T> implements ObjectCollection<T> {
         collectionName = objectClass.getAnnotation(ElementCollection.class).name();
         gson = new GsonBuilder().
                 registerTypeAdapterFactory(new ReferenceTypeAdapterFactory())
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .serializeNulls()
                 .setPrettyPrinting()
                 .create();

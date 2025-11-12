@@ -26,9 +26,10 @@ public abstract class Person {
         this.email = FieldValidator.validateEmail(email);
         this.password = FieldValidator.validateNullOrEmptyString(password, "Password");
         this.birthDate = FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
+        id = UUID.randomUUID();
     }
 
-    public Person() {
+    protected Person() {
     }
 
     public void setFirstName(String firstName) {
@@ -77,5 +78,9 @@ public abstract class Person {
 
     public LocalDate getBirthDate() {
         return birthDate;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

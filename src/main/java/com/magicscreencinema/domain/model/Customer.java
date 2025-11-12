@@ -9,8 +9,6 @@ import java.util.UUID;
 
 @ElementCollection(name = "customers")
 public class Customer extends Person {
-    @Id
-    private UUID id;
     private int loyaltyPoints = 0;
 
     public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, int loyaltyPoints) {
@@ -20,6 +18,8 @@ public class Customer extends Person {
 
     public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
+    }
+    private Customer() {
     }
 
     public void setLoyaltyPoints(int loyaltyPoints) {

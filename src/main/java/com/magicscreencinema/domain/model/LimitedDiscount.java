@@ -21,9 +21,10 @@ public class LimitedDiscount {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
         this.startTime = startTime;
         this.endTime = endTime;
+        id = UUID.randomUUID();
     }
 
-    public LimitedDiscount() {
+    private LimitedDiscount() {
     }
 
     public void setStartTime(LocalDateTime startTime) {
@@ -44,5 +45,9 @@ public class LimitedDiscount {
 
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

@@ -27,38 +27,51 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
     public void write(JsonWriter writer, T entityToSave) throws IOException {
         writer.beginObject();
 
-        for (Field currentField : type.getDeclaredFields()) {
-            currentField.setAccessible(true);
-            Object currentFieldValue;
+        List<Class<?>> hierarchy = new ArrayList<>();
+        Class<?> currentType = entityToSave.getClass();
+        while (currentType != null && currentType != Object.class) {
+            hierarchy.add(0, currentType);
+            currentType = currentType.getSuperclass();
+        }
 
-            try {
-                currentFieldValue = currentField.get(entityToSave);
+        for (Class<?> clazz : hierarchy) {
+            for (Field currentField : clazz.getDeclaredFields()) {
+                currentField.setAccessible(true);
 
-                if (currentFieldValue == null) {
-                    writer.name(currentField.getName()).nullValue();
+                if (Modifier.isStatic(currentField.getModifiers()) || currentField.isSynthetic()) {
                     continue;
                 }
 
-                if (PersistenceUtil.isElementCollection(currentField.getType())) {
-                    writeSingleReference(currentField, entityToSave, currentFieldValue);
-                    writer.name(currentField.getName()).nullValue();
-                } else if (PersistenceUtil.isCollectionOfElementCollection(currentField)) {
-                    writeCollectionReference(currentField, entityToSave, currentFieldValue);
-                    writeEmptyArray(writer, currentField.getName());
-                } else {
+                try {
+                    Object currentFieldValue = currentField.get(entityToSave);
                     writer.name(currentField.getName());
-                    gson.toJson(currentFieldValue, currentField.getType(), writer);
-                }
 
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Could not access field " + currentField.getName(), e);
-            } catch (NoSuchFieldException e) {
-                throw new FileNotFoundException("Field not found during cascade save: " + e.getMessage());
+                    if (currentFieldValue == null) {
+                        writer.nullValue();
+                        continue;
+                    }
+
+                    if (PersistenceUtil.isElementCollection(currentField.getType())) {
+                        writeSingleReference(currentField, entityToSave, currentFieldValue);
+                        writer.nullValue();
+                    } else if (PersistenceUtil.isCollectionOfElementCollection(currentField)) {
+                        writeCollectionReference(currentField, entityToSave, currentFieldValue);
+                        writeEmptyArray(writer, currentField.getName());
+                    } else {
+                        gson.toJson(currentFieldValue, currentField.getType(), writer);
+                    }
+
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Could not access field " + currentField.getName(), e);
+                } catch (NoSuchFieldException e) {
+                    throw new FileNotFoundException("Field not found during cascade save: " + e.getMessage());
+                }
             }
         }
 
         writer.endObject();
     }
+
 
     private void writeSingleReference(Field currentField, Object entityToSave, Object currentValue) throws IOException, IllegalAccessException {
         if (currentField.isAnnotationPresent(ManyToOne.class)) {
@@ -225,14 +238,21 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
         T instance = createInstance();
         UUID instanceId = null;
-        Field idField = PersistenceUtil.findIdField(type);
+
+        Class<?> currentType = instance.getClass();
+        Field idField = PersistenceUtil.findIdField(currentType);
 
         reader.beginObject();
         while (reader.hasNext()) {
             String name = reader.nextName();
 
             try {
-                Field field = type.getDeclaredField(name);
+                Field field = findFieldInHierarchy(currentType, name);
+                if (field == null) {
+                    reader.skipValue();
+                    continue;
+                }
+
                 if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
                     reader.skipValue();
                     continue;
@@ -243,7 +263,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                 if (field.equals(idField)) {
                     instanceId = gson.fromJson(reader, field.getType());
                     field.set(instance, instanceId);
-                    PersistenceContext.registerSubContext(type, instanceId, instance);
+                    PersistenceContext.registerSubContext(currentType, instanceId, instance);
                     continue;
                 }
 
@@ -260,10 +280,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
             } catch (IllegalAccessException e) {
                 throw new DeserializationException(
-                        "Could not access field " + name + " of class " + type.getName(), e);
-            } catch (NoSuchFieldException e) {
-                throw new FieldNotFoundException(
-                        "Field " + name + " not found in class " + type.getName(), e);
+                        "Could not access field " + name + " of class " + currentType.getName(), e);
             }
         }
 
@@ -271,23 +288,8 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         return instance;
     }
 
-    private T createInstance() {
-        try {
-            Constructor<T> constructor = type.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (NoSuchMethodException e) {
-            throw new MissingNoArgsConstructorException(
-                    "Class " + type.getName() + " must have a public or accessible no-argument constructor");
-        } catch (Exception e) {
-            throw new DeserializationException(
-                    "Could not create instance of " + type.getName(), e
-            );
-        }
-    }
-
     private void readCollectionReference(Field field, Object instance, UUID id)
-            throws IOException, IllegalAccessException, NoSuchFieldException {
+            throws IOException, IllegalAccessException {
 
         if (field.isAnnotationPresent(OneToMany.class)) {
             readOneToManyRelationship(field, instance, id);
@@ -393,6 +395,32 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         if (found != null) PersistenceContext.registerInContext(found);
 
         field.set(instance, found);
+    }
+
+    private T createInstance() {
+        try {
+            Constructor<T> constructor = type.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (NoSuchMethodException e) {
+            throw new MissingNoArgsConstructorException(
+                    "Class " + type.getName() + " must have a public or accessible no-argument constructor");
+        } catch (Exception e) {
+            throw new DeserializationException(
+                    "Could not create instance of " + type.getName(), e
+            );
+        }
+    }
+    private Field findFieldInHierarchy(Class<?> clazz, String fieldName) {
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            try {
+                return current.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+        return null;
     }
 
     private boolean isCascadeSave(Cascade[] cascade) {

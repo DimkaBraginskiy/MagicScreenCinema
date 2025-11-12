@@ -27,9 +27,10 @@ public class Seance {
         this.isCancelled = isCancelled;
         this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
+        id = UUID.randomUUID();
     }
 
-    public Seance() {
+    private Seance() {
     }
 
     public LocalDateTime getStartTime() {
@@ -72,5 +73,9 @@ public class Seance {
 
     public void setHall(Hall hall) {
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

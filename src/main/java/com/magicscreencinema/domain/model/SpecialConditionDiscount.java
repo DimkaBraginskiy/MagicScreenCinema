@@ -16,7 +16,7 @@ public class SpecialConditionDiscount {
         this.conditionDescription = FieldValidator.validateNullOrEmptyString(conditionDescription, "Condition Description");
     }
 
-    public SpecialConditionDiscount() {
+    private SpecialConditionDiscount() {
     }
 
     public void setConditionDescription(String conditionDescription) {
@@ -25,5 +25,9 @@ public class SpecialConditionDiscount {
 
     public String getConditionDescription() {
         return conditionDescription;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

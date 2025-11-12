@@ -14,9 +14,10 @@ public class Genre {
 
     public Genre(String name) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
+        id = UUID.randomUUID();
     }
 
-    public Genre() {
+    private Genre() {
     }
 
     public String getName() {
@@ -25,5 +26,9 @@ public class Genre {
 
     public void setName(String name) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

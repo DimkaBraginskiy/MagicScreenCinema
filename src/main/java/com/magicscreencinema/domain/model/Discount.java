@@ -22,6 +22,7 @@ public class Discount {
         }
 
         this.promoCode = FieldValidator.validateNullOrEmptyString(promoCode, "Promo Code");
+        id = UUID.randomUUID();
     }
 
     public Discount() {
@@ -45,5 +46,9 @@ public class Discount {
 
     public String getPromoCode() {
         return promoCode;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

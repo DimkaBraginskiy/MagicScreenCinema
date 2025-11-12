@@ -24,9 +24,10 @@ public class Movie {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
         this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
+        id = UUID.randomUUID();
     }
 
-    public Movie() {
+    private Movie() {
     }
 
     public String getName() {
@@ -67,5 +68,9 @@ public class Movie {
 
     public void setMovieDuration(long movieDuration) {
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

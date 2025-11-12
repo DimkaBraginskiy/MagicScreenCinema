@@ -18,7 +18,7 @@ public class Hall {
     @OneToMany(cascade = {Cascade.SAVE, Cascade.DELETE})
     private List<Seat> seats;
 
-    public Hall() {
+    private Hall() {
     }
 
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, List<Seat> seats) {
@@ -27,6 +27,7 @@ public class Hall {
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
         this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
+        id = UUID.randomUUID();
     }
 
     public int getHallNumber() {
@@ -71,9 +72,5 @@ public class Hall {
 
     public UUID getId() {
         return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 }

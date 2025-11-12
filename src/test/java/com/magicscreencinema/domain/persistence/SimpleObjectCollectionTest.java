@@ -281,7 +281,7 @@ public class SimpleObjectCollectionTest {
                 """.formatted(uuid);
         Files.writeString(filePath, updatedJson);
 
-        assertThrows(FieldNotFoundException.class, () -> registry.findById(uuid));
+        assertNull(registry.findById(uuid).get().getName());
     }
 
     @Test

@@ -14,13 +14,14 @@ public class Advertisement {
     private long duration;
     private String advertiserName;
 
-    public Advertisement() {
+    private Advertisement() {
     }
 
     public Advertisement(String name, long duration, String advertiserName) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.duration = FieldValidator.validatePositiveNumber(duration, "Duration");
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");
+        id = UUID.randomUUID();
     }
 
     public String getName() {
@@ -45,5 +46,9 @@ public class Advertisement {
 
     public void setAdvertiserName(String advertiserName) {
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }
