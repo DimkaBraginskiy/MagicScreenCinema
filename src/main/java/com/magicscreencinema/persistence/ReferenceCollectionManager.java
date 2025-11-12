@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 class ReferenceCollectionManager {
     private final Path path;
@@ -29,8 +30,8 @@ class ReferenceCollectionManager {
     }
 
     public void saveRelation(UUID ownerId, UUID relatedId) throws IOException {
-        String record = ownerId + "_" +relatedId;
-        if(existsById(ownerId, relatedId)){
+        String record = ownerId + "_" + relatedId;
+        if (existsById(ownerId, relatedId)) {
             return;
         }
         Files.writeString(path, record + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -71,7 +72,7 @@ class ReferenceCollectionManager {
     }
 
     private Predicate<String> getFilterPredicate(UUID id, boolean isOwner) {
-        return  isOwner
+        return isOwner
                 ? line -> line.startsWith(id + "_")
                 : line -> line.endsWith("_" + id);
     }

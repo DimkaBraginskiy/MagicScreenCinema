@@ -2,20 +2,16 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.HallTypeEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
-import org.example.persistence.declaration.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@ElementCollection(name = "halls")
 public class Hall {
-    @Id
     private UUID id;
     private int hallNumber;
     private HallTypeEnum hallType;
     private int maxRow;
     private int rowWidth;
-    @OneToMany(fetch = Fetch.EAGER, cascade = Cascade.SAVE)
     private List<Seat> seats;
     public Hall() {
     }

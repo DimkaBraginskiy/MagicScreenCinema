@@ -2,23 +2,15 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.exception.InvalidRowException;
 import com.magicscreencinema.domain.validation.FieldValidator;
-import org.example.persistence.declaration.ElementCollection;
-import org.example.persistence.declaration.Id;
-import org.example.persistence.declaration.ManyToOne;
 
 import java.util.UUID;
 
-@ElementCollection(name = "seats")
 public class Seat {
-    @Id
     private UUID id;
     private int seatNumber;
     private int row;
     private static final double PRICE = 20;
-    @ManyToOne
     private Hall hall;
-    public Seat() {
-    }
 
     public Seat(int seatNumber, int row, Hall hall) {
         this.seatNumber = FieldValidator.validatePositiveNumber(seatNumber, "Seat Number");

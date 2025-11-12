@@ -3,7 +3,6 @@ package com.magicscreencinema.persistence;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.magicscreencinema.persistence.declaration.*;
-import org.example.persistence.declaration.*;
 import com.magicscreencinema.persistence.exception.CouldNotPersistObjectException;
 import com.magicscreencinema.persistence.exception.CouldNotReadObjectException;
 import com.magicscreencinema.persistence.exception.NotACollectionException;
@@ -15,11 +14,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-class SimpleObjectCollection<T> implements ObjectCollection<T>{
+class SimpleObjectCollection<T> implements ObjectCollection<T> {
     private final Class<T> objectClass;
     private final Field idField;
     private final String collectionName;
     private final Gson gson;
+
     public SimpleObjectCollection(Class<T> objectClass) {
         this.objectClass = objectClass;
         if (!objectClass.isAnnotationPresent(ElementCollection.class)) {
@@ -33,9 +33,10 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                 .setPrettyPrinting()
                 .create();
     }
+
     @Override
     public void save(T object) {
-        if(object == null) return;
+        if (object == null) return;
         UUID id = PersistenceUtil.extractId(object, idField);
         String json = gson.toJson(object);
 
@@ -46,8 +47,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
             Files.writeString(objectPath, json);
         } catch (IOException e) {
             throw new CouldNotPersistObjectException("Could not persist object of class " + objectClass.getName(), e);
-        }
-        finally {
+        } finally {
             PersistenceContext.removeFromContext(objectClass, id);
         }
     }
@@ -56,14 +56,13 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     public Optional<T> findById(UUID id) {
         Path objectPath = getObjectFilePath(id);
 
-        if(Files.exists(objectPath)){
+        if (Files.exists(objectPath)) {
             try {
                 String json = Files.readString(objectPath);
                 return Optional.ofNullable(gson.fromJson(json, objectClass));
             } catch (IOException e) {
                 throw new CouldNotReadObjectException("Could not read object of class " + objectClass.getName() + " with id " + id, e);
-            }
-            finally {
+            } finally {
                 PersistenceContext.removeFromContext(objectClass, id);
             }
         }
@@ -76,17 +75,16 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
         File folder = collectionPath.toFile();
 
         List<T> results = new ArrayList<>();
-        for(File file : Objects.requireNonNull(folder.listFiles())){
-            if(file.isFile() && file.getName().endsWith(".json")){
+        for (File file : Objects.requireNonNull(folder.listFiles())) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
                 try {
                     String json = Files.readString(file.toPath());
                     T object = gson.fromJson(json, objectClass);
                     results.add(object);
                 } catch (IOException e) {
                     throw new CouldNotReadObjectException("Could not read object file " + file.getName(), e);
-                }
-                finally {
-                    if(flushContext) PersistenceContext.flush();
+                } finally {
+                    if (flushContext) PersistenceContext.flush();
                 }
             }
         }
@@ -105,7 +103,7 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
     }
 
     @Override
-    public boolean deleteById(UUID id){
+    public boolean deleteById(UUID id) {
         Path objectPath = getObjectFilePath(id);
         Field[] fields = objectClass.getDeclaredFields();
         try {
@@ -113,14 +111,12 @@ class SimpleObjectCollection<T> implements ObjectCollection<T>{
                 boolean isCascade = false;
                 if (field.isAnnotationPresent(OneToMany.class)) {
                     isCascade = Arrays.stream(field.getAnnotation(OneToMany.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
-                }
-                else if(field.isAnnotationPresent(ManyToMany.class)){
+                } else if (field.isAnnotationPresent(ManyToMany.class)) {
                     isCascade = Arrays.stream(field.getAnnotation(ManyToMany.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
-                }
-                else if(field.isAnnotationPresent(OneToOne.class)){
+                } else if (field.isAnnotationPresent(OneToOne.class)) {
                     isCascade = Arrays.stream(field.getAnnotation(OneToOne.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
                 }
-                if(isCascade) handleCascade(field, id);
+                if (isCascade) handleCascade(field, id);
             }
             clearAllRelations(id);
             return Files.deleteIfExists(objectPath);

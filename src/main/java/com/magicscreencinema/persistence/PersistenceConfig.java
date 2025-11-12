@@ -1,7 +1,9 @@
 package com.magicscreencinema.persistence;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Properties;
 
@@ -19,8 +21,11 @@ class PersistenceConfig {
 
     private static void load() throws IOException {
         Properties props = new Properties();
-        try (FileInputStream fis = new FileInputStream("persistence.properties")) {
-            props.load(fis);
+        try (InputStream in = PersistenceConfig.class.getClassLoader().getResourceAsStream("persistence.properties")) {
+            if (in == null) {
+                throw new FileNotFoundException("persistence.properties not found in classpath");
+            }
+            props.load(in);
         }
 
         DATABASE_PATH = Path.of(props.getProperty("database.path", "db")).toAbsolutePath();
