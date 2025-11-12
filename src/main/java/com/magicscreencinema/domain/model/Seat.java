@@ -2,14 +2,20 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.exception.InvalidRowException;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToOne;
 
 import java.util.UUID;
 
+@ElementCollection(name = "seat")
 public class Seat {
+    @Id
     private UUID id;
     private int seatNumber;
     private int row;
     private static final double PRICE = 20;
+    @ManyToOne
     private Hall hall;
 
     public Seat(int seatNumber, int row, Hall hall) {
@@ -18,6 +24,9 @@ public class Seat {
 
         if (row > hall.getMaxRow()) throw new InvalidRowException("Seat row exceeds hall max rows.");
         this.row = FieldValidator.validatePositiveNumber(row, "Row");
+    }
+
+    public Seat() {
     }
 
     public int getSeatNumber() {

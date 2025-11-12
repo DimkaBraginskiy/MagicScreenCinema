@@ -2,8 +2,15 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.exception.InvalidDiscountException;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
+import java.util.UUID;
+
+@ElementCollection(name = "discounts")
 public class Discount {
+    @Id
+    private UUID id;
     private double discountAmount;
     private String promoCode;
 
@@ -15,6 +22,9 @@ public class Discount {
         }
 
         this.promoCode = FieldValidator.validateNullOrEmptyString(promoCode, "Promo Code");
+    }
+
+    public Discount() {
     }
 
     public void setDiscountAmount(double discountAmount) {

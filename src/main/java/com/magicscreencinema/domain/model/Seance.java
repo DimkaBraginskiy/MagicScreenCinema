@@ -1,16 +1,25 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToOne;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@ElementCollection(name = "seance")
 public class Seance {
+    @Id
+    private UUID id;
     private LocalDateTime startTime;
     private boolean isCancelled;
     private static final int ADVERTISEMENTS_TIME = 20;
 
+    @ManyToOne
     public Movie movie;
+    @ManyToOne
     public Hall hall;
 
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
@@ -18,6 +27,9 @@ public class Seance {
         this.isCancelled = isCancelled;
         this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
+    }
+
+    public Seance() {
     }
 
     public LocalDateTime getStartTime() {

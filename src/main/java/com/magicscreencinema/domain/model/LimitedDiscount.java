@@ -1,11 +1,17 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@ElementCollection(name = "limitedDiscounts")
 public class LimitedDiscount {
+    @Id
+    private UUID id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -15,6 +21,9 @@ public class LimitedDiscount {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    public LimitedDiscount() {
     }
 
     public void setStartTime(LocalDateTime startTime) {

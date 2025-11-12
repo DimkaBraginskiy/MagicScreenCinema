@@ -1,10 +1,16 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@ElementCollection(name = "shifts")
 public class Shift {
+    @Id
+    private UUID id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -14,6 +20,9 @@ public class Shift {
         FieldValidator.validateStartTimeIsAfterEndTime(startTime, endTime);
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    public Shift() {
     }
 
     public LocalDateTime getStartTime() {

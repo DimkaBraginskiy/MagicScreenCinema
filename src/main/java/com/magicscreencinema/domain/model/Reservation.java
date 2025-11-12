@@ -2,6 +2,7 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.ReservationStatusEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,12 +10,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@ElementCollection(name = "reservations")
 public class Reservation {
+    @Id
+    private UUID id;
     private UUID reservationNumber;
     private LocalDateTime reservationTime;
     private ReservationStatusEnum status;
 
+    @ManyToOne()
     private Discount discount;
+    @OneToMany(cascade = {Cascade.DELETE, Cascade.SAVE}, fetch = Fetch.EAGER)
     private List<Seat> seats;
 
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Discount discount, List<Seat> seats) {
@@ -25,6 +31,9 @@ public class Reservation {
 
         this.discount = discount;
         this.seats = FieldValidator.validateSeatList(seats, "Seats");
+    }
+
+    public Reservation() {
     }
 
     public void setReservationTime(LocalDateTime reservationTime) {

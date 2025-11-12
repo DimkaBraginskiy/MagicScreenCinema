@@ -1,11 +1,17 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
+@ElementCollection(name = "persons")
 public abstract class Person {
+    @Id
+    private UUID id;
     private String firstName;
     private String lastName;
     private String phoneNumber;
@@ -20,6 +26,9 @@ public abstract class Person {
         this.email = FieldValidator.validateEmail(email);
         this.password = FieldValidator.validateNullOrEmptyString(password, "Password");
         this.birthDate = FieldValidator.validateDateNotInTheFuture(birthDate, "Birth Date");
+    }
+
+    public Person() {
     }
 
     public void setFirstName(String firstName) {

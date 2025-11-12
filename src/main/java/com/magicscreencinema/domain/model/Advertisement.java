@@ -1,11 +1,21 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
+import java.util.UUID;
+
+@ElementCollection(name = "advertisements")
 public class Advertisement {
+    @Id
+    private UUID id;
     private String name;
     private long duration;
     private String advertiserName;
+
+    public Advertisement() {
+    }
 
     public Advertisement(String name, long duration, String advertiserName) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");

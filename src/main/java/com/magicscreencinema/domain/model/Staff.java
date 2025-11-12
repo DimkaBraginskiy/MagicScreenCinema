@@ -2,15 +2,24 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToOne;
 
+import javax.annotation.processing.Generated;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
+@ElementCollection(name = "staffs")
 public class Staff extends Person {
+    @Id
+    private UUID id;
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
 
+    @ManyToOne
     private Staff manager;
 
     public Staff(String firstName, String lastName, String phoneNumber, String email, String password,
@@ -20,6 +29,10 @@ public class Staff extends Person {
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
         this.manager = FieldValidator.validateObjectRecursion(manager, this);
+    }
+
+    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
+        super(firstName, lastName, phoneNumber, email, password, birthDate);
     }
 
     public void setHireDate(LocalDate hireDate) {

@@ -2,10 +2,16 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.AgeRestrictionEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Id;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
+@ElementCollection(name = "movies")
 public class Movie {
+    @Id
+    private UUID id;
     private String name;
     private AgeRestrictionEnum ageRestriction;
     private String description;
@@ -18,6 +24,9 @@ public class Movie {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
         this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
+    }
+
+    public Movie() {
     }
 
     public String getName() {
