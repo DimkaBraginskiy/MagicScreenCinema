@@ -46,6 +46,14 @@ class SimpleObjectCollection<T> implements ObjectCollection<T> {
         try {
             Files.writeString(objectPath, json);
         } catch (IOException e) {
+            try {
+                File file = objectPath.toFile();
+                if (file.exists()) {
+                    file.setWritable(true);
+                    Files.deleteIfExists(objectPath);
+                }
+            } catch (IOException _) {
+            }
             throw new CouldNotPersistObjectException("Could not persist object of class " + objectClass.getName(), e);
         } finally {
             PersistenceContext.removeFromContext(objectClass, id);

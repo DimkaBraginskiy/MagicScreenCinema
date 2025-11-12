@@ -1,14 +1,18 @@
 package com.magicscreencinema.persistence;
 
 import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.exception.InvalidIdTypeException;
+import com.magicscreencinema.persistence.exception.MissingIdException;
 import com.magicscreencinema.persistence.exception.NotACollectionException;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class ObjectCollectionRegistry {
     private static final Map<Class<?>, ObjectCollection<?>> collections = new HashMap<>();
@@ -18,7 +22,9 @@ public class ObjectCollectionRegistry {
     }
 
     public static <T> ObjectCollection<T> getCollection(Class<T> clazz) {
-        if(PersistenceUtil.isElementCollection(clazz)) {
+        if (PersistenceUtil.isElementCollection(clazz)) {
+            Field idField = PersistenceUtil.findIdField(clazz);
+            PersistenceUtil.isUUIDType(idField);
             addToDb(clazz);
             ObjectCollection<?> collection = collections.computeIfAbsent(clazz, k -> create(clazz));
 
@@ -37,7 +43,6 @@ public class ObjectCollectionRegistry {
             } catch (IOException e) {
                 throw new RuntimeException("Could not create collection folder: " + folderPath, e);
             }
-            System.out.println("Created collection folder: " + folderPath);
         }
     }
 

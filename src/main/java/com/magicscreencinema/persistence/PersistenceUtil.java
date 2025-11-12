@@ -13,7 +13,7 @@ import java.util.UUID;
 
 class PersistenceUtil {
     public static UUID extractId(Object entity) {
-        if(entity == null){
+        if (entity == null) {
             throw new MissingIdException("The provided entity is null");
         }
         var clazz = entity.getClass();
@@ -38,8 +38,8 @@ class PersistenceUtil {
                 return uuid;
             }
             throw new InvalidIdTypeException("The ID field must be of type UUID in class " + entity.getClass().getName());
-        }
-        catch (IllegalAccessException e) {
+
+        } catch (IllegalAccessException e) {
             throw new RuntimeException("Could not access ID field", e);
         }
     }
@@ -60,6 +60,12 @@ class PersistenceUtil {
 
     public static boolean isElementCollection(Class<?> clazz) {
         return clazz.isAnnotationPresent(ElementCollection.class);
+    }
+
+    public static void isUUIDType(Field field) {
+        if (!field.getType().equals(UUID.class)) {
+            throw new InvalidIdTypeException("Field annotated with @Id must be of type UUID in class");
+        }
     }
 
     static Class<?> getGenericType(Field field) {

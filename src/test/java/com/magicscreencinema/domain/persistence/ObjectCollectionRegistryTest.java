@@ -3,8 +3,10 @@ package com.magicscreencinema.domain.persistence;
 import com.magicscreencinema.domain.persistence.testmodel.PersonAnnotatedWithId;
 import com.magicscreencinema.domain.persistence.testmodel.PersonAnnotatedWithoutId;
 import com.magicscreencinema.domain.persistence.testmodel.PersonNotAnnotated;
+import com.magicscreencinema.domain.persistence.testmodel.SimplePersonWithStringID;
 import com.magicscreencinema.persistence.ObjectCollection;
 import com.magicscreencinema.persistence.ObjectCollectionRegistry;
+import com.magicscreencinema.persistence.exception.InvalidIdTypeException;
 import com.magicscreencinema.persistence.exception.MissingIdException;
 import com.magicscreencinema.persistence.exception.NotACollectionException;
 import org.junit.Test;
@@ -33,5 +35,13 @@ public class ObjectCollectionRegistryTest {
             ObjectCollectionRegistry.getCollection(PersonAnnotatedWithoutId.class);
         });
         assertEquals("No field with @Id annotation found in class " + PersonAnnotatedWithoutId.class.getName(), exception.getMessage());
+    }
+
+    @Test
+    public void getCollection_WithElementCollectionAnnotatedClassWithStringIdObject_ShouldThrowMissingIdException() {
+        InvalidIdTypeException exception = assertThrows(InvalidIdTypeException.class, () -> {
+            ObjectCollectionRegistry.getCollection(SimplePersonWithStringID.class);
+        });
+        assertEquals("Field annotated with @Id must be of type UUID in class", exception.getMessage());
     }
 }
