@@ -1,6 +1,5 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.exception.AlreadyAssignedException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
 import com.magicscreencinema.persistence.declaration.Id;
