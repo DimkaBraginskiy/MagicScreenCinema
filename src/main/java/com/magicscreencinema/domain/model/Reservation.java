@@ -40,23 +40,14 @@ public class Reservation {
         // this.discount = FieldValidator.validateObjectNotNull(discount, "discount"); // TODO dima eto twoe
         // this.seats = FieldValidator.validateSeatList(seats, "Seats"); // TODO dima eto twoe
 
-        assignSeance(seance);
+        setSeance(seance);
         assignPayment(payment);
     }
 
     //--association logic
     //seance
-    public void assignSeance(Seance newSeance) {
-        FieldValidator.validateObjectNotNull(newSeance, "Seance");
-
-        if (this.seance == newSeance) return;
-
-        if (this.seance != null) {
-            this.seance.removeReservation(this);
-        }
-
-        this.seance = newSeance;
-        this.seance.addReservation(this);
+    void setSeance(Seance seance) {
+        this.seance = seance;
     }
 
     //payment
