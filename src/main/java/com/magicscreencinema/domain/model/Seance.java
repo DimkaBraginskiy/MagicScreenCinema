@@ -92,11 +92,11 @@ public class Seance {
     }
 
     //reservation
-    public void addReservation(Reservation reservation) {
+    void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
         this.reservations.add(reservation);
     }
-    public void removeReservation(Reservation reservation) {
+    void removeReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
         this.reservations.remove(reservation);
     }

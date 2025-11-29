@@ -46,7 +46,7 @@ public class Reservation {
 
     //--association logic
     //seance
-    void assignSeance(Seance newSeance) {
+    public void assignSeance(Seance newSeance) {
         FieldValidator.validateObjectNotNull(newSeance, "Seance");
 
         if (this.seance == newSeance) return;
@@ -60,7 +60,7 @@ public class Reservation {
     }
 
     //payment
-    void assignPayment(Payment newPayment) {
+    public void assignPayment(Payment newPayment) {
         // if we are just clearing the payment (setting null)
         if (newPayment == null) {
             if (this.payment != null) {
