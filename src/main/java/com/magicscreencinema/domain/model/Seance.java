@@ -101,7 +101,6 @@ public class Seance {
             reservation.getSeance().removeReservation(reservation);
         }
 
-
         this.reservations.add(reservation);
         reservation.setSeance(this);
     }
