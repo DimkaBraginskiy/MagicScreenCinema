@@ -26,7 +26,6 @@ public class Seance {
     private Movie movie;
     @ManyToOne
     private Hall hall;
-
     private Set<Reservation> reservations;
     private Set<Advertisement> advertisements;
 
@@ -35,17 +34,17 @@ public class Seance {
         this.reservations = new HashSet<>();
         this.advertisements = new HashSet<>();
     }
-
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
+        this();
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
         this.isCancelled = isCancelled;
         this.reservations = new HashSet<>();
         this.advertisements = new HashSet<>();
 
+        //checks for null in methods!
         setHall(hall);
-        //addMovie(movie);
+        setMovie(movie);
     }
-
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall,
                   Set<Reservation> reservations, Set<Advertisement> advertisements) {
         this(startTime, isCancelled, movie, hall);
@@ -55,42 +54,57 @@ public class Seance {
             addReservation(reservation);
         }
 
-//      FieldValidator.validateObjectNotNull(advertisements, "advertisements");
-        /*for(Advertisement advertisement : advertisements) {
+        FieldValidator.validateObjectNotNull(advertisements, "advertisements");
+        for (Advertisement advertisement : advertisements) {
             addAdvertisement(advertisement);
-        }*/
+        }
     }
 
     //--association logic
-    //hall
+    // movie
+    public void setMovie(Movie newMovie) {
+        FieldValidator.validateObjectNotNull(newMovie, "Movie");
+
+        // to prevent stackOverFlow
+        if (this.movie == newMovie) return;
+
+        if (this.movie != null) {
+            Movie oldMovie = this.movie;
+            oldMovie.reassignSeance(newMovie, this);
+        }
+
+        this.movie = newMovie;
+
+        newMovie.addSeance(this);
+    }
+
+    // hall
     public void setHall(Hall newHall) {
         FieldValidator.validateObjectNotNull(newHall, "Hall");
 
-        // do nothing if assigning the same hall
+        // to prevent stackOverFlow
         if (this.hall == newHall) return;
 
-        // if the seance already has a hall
         if (this.hall != null) {
             Hall oldHall = this.hall;
-            this.hall = null;
             oldHall.reassignSeance(newHall, this);
-
-            this.hall = newHall;
-
-        } else {
-            if (!newHall.getSeances().contains(this))
-                newHall.addSeance(this);
-            this.hall = newHall;
         }
+
+        this.hall = newHall;
+
+        newHall.addSeance(this);
     }
 
-    //reservation
     public void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
 
-        if (reservation.getSeance() != null) {
+        // allow if the reservation is already assigned to THIS seance
+        if (reservation.getSeance() != null && reservation.getSeance() != this) {
             throw new AlreadyAssignedException("Cannot add Reservation directly if it is already assigned to another Seance. Use Reservation.setSeance() to reassign.");
         }
+
+        // to prevent infinite loops
+        if (this.reservations.contains(reservation)) return;
 
         this.reservations.add(reservation);
 
@@ -98,12 +112,33 @@ public class Seance {
             reservation.setSeance(this);
         }
     }
+
     public void removeReservation(Reservation reservation) {
         if (this.reservations.remove(reservation)) {
             if (reservation.getSeance() == this) {
                 reservation.deleteSeance();
             }
         }
+    }
+
+    // advertisement
+    public void addAdvertisement(Advertisement advertisement) {
+        FieldValidator.validateObjectNotNull(advertisement, "Advertisement");
+
+        if (this.advertisements.contains(advertisement)) return;
+
+        this.advertisements.add(advertisement);
+
+        advertisement.addSeance(this);
+    }
+    public void removeAdvertisement(Advertisement advertisement) {
+        FieldValidator.validateObjectNotNull(advertisement, "Advertisement");
+
+        if (!this.advertisements.contains(advertisement)) return;
+
+        this.advertisements.remove(advertisement);
+
+        advertisement.removeSeance(this);
     }
 
     //--getters

@@ -28,7 +28,7 @@ public class Reservation {
     private Payment payment;
 
     //--constructors
-    private Reservation() {}
+    public Reservation() {}
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
@@ -49,38 +49,45 @@ public class Reservation {
     public void setSeance(Seance newSeance) {
         FieldValidator.validateObjectNotNull(newSeance, "seance");
 
-        // setting the same object
         if (this.seance == newSeance) return;
 
-        // remove from old Seance if it exists
         if (this.seance != null)
             this.seance.removeReservation(this);
 
-        // set the new Seance
         this.seance = newSeance;
 
-        // add to the new Seance
         newSeance.addReservation(this);
     }
+
     protected void deleteSeance() {
         this.seance = null;
     }
 
     //payment
     public void setPayment(Payment newPayment) {
-        FieldValidator.validateObjectNotNull(payment, "payment");
+        FieldValidator.validateObjectNotNull(newPayment, "Payment");
 
-       if (this.payment == newPayment) return;
+        // prevent infinite recursion
+        if (this.payment == newPayment) return;
 
-       this.payment = newPayment;
+        // break link with old payment
+        if (this.payment != null) {
+            Payment oldPayment = this.payment;
+            this.payment = null;
+            oldPayment.deleteReservation();
+        }
 
-       if (newPayment.getReservation() != this) {
+        this.payment = newPayment;
+
+        if (newPayment.getReservation() != this) {
             newPayment.setReservation(this);
-       }
+        }
     }
+
     protected void deletePayment() {
         this.payment = null;
     }
+
 
     //--setters
     public void setReservationTime(LocalDateTime reservationTime) {

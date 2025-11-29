@@ -38,9 +38,9 @@ public class Payment {
     public void setReservation(Reservation newReservation) {
         FieldValidator.validateObjectNotNull(newReservation, "Reservation");
 
+        // prevent infinite recursion
         if (this.reservation == newReservation) return;
 
-        // break link with old reservation
         if (this.reservation != null) {
             Reservation oldReservation = this.reservation;
             this.reservation = null;
@@ -53,6 +53,7 @@ public class Payment {
             newReservation.setPayment(this);
         }
     }
+
     protected void deleteReservation() {
         this.reservation = null;
     }

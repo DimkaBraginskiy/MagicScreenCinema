@@ -30,53 +30,52 @@ public class Hall {
         seances = new HashSet<>();
         //TODO add seats = new HashSet<>();
     }
-
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth) {
+        this();
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
         this.hallType = FieldValidator.validateObjectNotNull(hallType, "Hall Type");
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
     }
-
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, List<Seat> seats, Set<Seance> seances) {
         this(hallNumber, hallType, maxRow, rowWidth);
         this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
 
-        if (seances != null) {
-            for (Seance seance : seances) {
-                addSeance(seance);
-            }
+        FieldValidator.validateObjectNotNull(seances, "seances");
+        for (Seance seance : seances) {
+            addSeance(seance);
         }
 
+
         //TODO dima
-        //
+        //FieldValidator.validateObjectNotNull(seats, "seats");
         // for (Seat seat : seats) {
         //      addSeat(seat);
         // }
         //
     }
 
-    // --association logic
-    //seance
+    //--association logic
+    // seance
+    //no remove because Seance cannot exist without hall
     public void addSeance(Seance seance) {
-        FieldValidator.validateObjectNotNull(seance, "seance");
+        FieldValidator.validateObjectNotNull(seance, "Seance");
 
-        if (seance.getHall() != null && seance.getHall() != this) {
-            throw new AlreadyAssignedException("Cannot add Seance to Hall directly if it is already assigned to another Hall. Use Seance.addHall() to reassign.");
-        }
+        if (this.seances.contains(seance)) return;
 
         this.seances.add(seance);
 
-        if (seance.getHall() != this)
+        if (seance.getHall() != this) {
             seance.setHall(this);
+        }
     }
-    // instead of removing. because seance cannot exist without a hall.
     public void reassignSeance(Hall targetHall, Seance seance) {
         FieldValidator.validateObjectNotNull(targetHall, "Target Hall");
         FieldValidator.validateObjectNotNull(seance, "Seance");
 
         if (this.seances.contains(seance)) {
             this.seances.remove(seance);
+
             targetHall.addSeance(seance);
         }
     }
