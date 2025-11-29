@@ -28,7 +28,7 @@ public class Reservation {
     private Payment payment;
 
     //--constructors
-    public Reservation() {}
+    private Reservation() {}
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
