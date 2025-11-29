@@ -40,54 +40,52 @@ public class Reservation {
         // this.discount = FieldValidator.validateObjectNotNull(discount, "discount"); // TODO dima eto twoe
         // this.seats = FieldValidator.validateSeatList(seats, "Seats"); // TODO dima eto twoe
 
-        setSeance(seance);
-        setPayment(payment);
+        assignSeance(seance);
+        assignPayment(payment);
     }
 
     //--association logic
     //seance
-    public void setSeance(Seance newSeance) {
-        FieldValidator.validateObjectNotNull(newSeance, "seance");
+    void assignSeance(Seance newSeance) {
+        FieldValidator.validateObjectNotNull(newSeance, "Seance");
 
         if (this.seance == newSeance) return;
 
-        if (this.seance != null)
+        if (this.seance != null) {
             this.seance.removeReservation(this);
+        }
 
         this.seance = newSeance;
-
-        newSeance.addReservation(this);
-    }
-
-    protected void deleteSeance() {
-        this.seance = null;
+        this.seance.addReservation(this);
     }
 
     //payment
-    public void setPayment(Payment newPayment) {
-        FieldValidator.validateObjectNotNull(newPayment, "Payment");
+    void assignPayment(Payment newPayment) {
+        // if we are just clearing the payment (setting null)
+        if (newPayment == null) {
+            if (this.payment != null) {
+                this.payment.assignReservation(null); // clear the reverse side (setting to null)
+                this.payment = null;
+            }
+            return;
+        }
 
-        // prevent infinite recursion
+        FieldValidator.validateObjectNotNull(newPayment, "Payment");
         if (this.payment == newPayment) return;
 
-        // break link with old payment
+        // if the new payment is already assigned to ANOTHER reservation
+        if (newPayment.getReservation() != null && newPayment.getReservation() != this) {
+            newPayment.getReservation().assignPayment(null);
+        }
+
+        // unlink ourselves from our currently assigned payment (if any)
         if (this.payment != null) {
-            Payment oldPayment = this.payment;
-            this.payment = null;
-            oldPayment.deleteReservation();
+            this.payment.assignReservation(null);
         }
 
         this.payment = newPayment;
-
-        if (newPayment.getReservation() != this) {
-            newPayment.setReservation(this);
-        }
+        this.payment.assignReservation(this);
     }
-
-    protected void deletePayment() {
-        this.payment = null;
-    }
-
 
     //--setters
     public void setReservationTime(LocalDateTime reservationTime) {

@@ -55,26 +55,13 @@ public class Movie {
 
     //--association logic
     //seance
-    //no remove because Seance cannot exist without movie
-    public void addSeance(Seance seance) {
+    void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (this.seances.contains(seance)) return;
-
         this.seances.add(seance);
-
-        if (seance.getMovie() != this) {
-            seance.setMovie(this);
-        }
     }
-    public void reassignSeance(Movie targetMovie, Seance seance) {
-        FieldValidator.validateObjectNotNull(targetMovie, "Target Movie");
+    void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (this.seances.contains(seance)) {
-            this.seances.remove(seance);
-            targetMovie.addSeance(seance);
-        }
+        this.seances.remove(seance);
     }
 
     //genre
@@ -84,9 +71,9 @@ public class Movie {
         if (this.genres.contains(genre)) return;
 
         this.genres.add(genre);
-
         genre.addMovie(this);
     }
+
     public void removeGenre(Genre genre) {
         FieldValidator.validateObjectNotNull(genre, "Genre");
 
@@ -99,7 +86,6 @@ public class Movie {
         }
 
         this.genres.remove(genre);
-
         genre.removeMovie(this);
     }
 

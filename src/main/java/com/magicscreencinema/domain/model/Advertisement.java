@@ -42,23 +42,13 @@ public class Advertisement {
 
     //--association logic
     //seance
-    public void addSeance(Seance seance) {
+    void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (this.seances.contains(seance)) return;
-
         this.seances.add(seance);
-
-        seance.addAdvertisement(this);
     }
-    public void removeSeance(Seance seance) {
+    void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (!this.seances.contains(seance)) return;
-
         this.seances.remove(seance);
-
-        seance.removeAdvertisement(this);
     }
 
     //--getters

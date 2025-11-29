@@ -39,21 +39,11 @@ public class Genre {
     //movie
     public void addMovie(Movie movie) {
         FieldValidator.validateObjectNotNull(movie, "Movie");
-
-        if (this.movies.contains(movie)) return;
-
         this.movies.add(movie);
-
-        movie.addGenre(this);
     }
     public void removeMovie(Movie movie) {
         FieldValidator.validateObjectNotNull(movie, "Movie");
-
-        if (!this.movies.contains(movie)) return;
-
         this.movies.remove(movie);
-
-        movie.removeGenre(this);
     }
 
     //--getters

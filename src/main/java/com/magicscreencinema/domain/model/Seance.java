@@ -42,8 +42,8 @@ public class Seance {
         this.advertisements = new HashSet<>();
 
         //checks for null in methods!
-        setHall(hall);
-        setMovie(movie);
+        assignHall(hall);
+        assignMovie(movie);
     }
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall,
                   Set<Reservation> reservations, Set<Advertisement> advertisements) {
@@ -62,63 +62,44 @@ public class Seance {
 
     //--association logic
     // movie
-    public void setMovie(Movie newMovie) {
+    public void assignMovie(Movie newMovie) {
         FieldValidator.validateObjectNotNull(newMovie, "Movie");
 
-        // to prevent stackOverFlow
+        // if trying to set the same movie
         if (this.movie == newMovie) return;
 
+        // remove this seance from the old movie's list
         if (this.movie != null) {
-            Movie oldMovie = this.movie;
-            oldMovie.reassignSeance(newMovie, this);
+            this.movie.removeSeance(this);
         }
 
         this.movie = newMovie;
-
-        newMovie.addSeance(this);
+        this.movie.addSeance(this);
     }
 
     // hall
-    public void setHall(Hall newHall) {
+    public void assignHall(Hall newHall) {
         FieldValidator.validateObjectNotNull(newHall, "Hall");
 
-        // to prevent stackOverFlow
+        // if already assigned to this hall
         if (this.hall == newHall) return;
 
         if (this.hall != null) {
-            Hall oldHall = this.hall;
-            oldHall.reassignSeance(newHall, this);
+            this.hall.removeSeance(this);
         }
 
         this.hall = newHall;
-
-        newHall.addSeance(this);
+        this.hall.addSeance(this);
     }
 
     //reservation
     public void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
-
-        // allow if the reservation is already assigned to THIS seance
-        if (reservation.getSeance() != null && reservation.getSeance() != this) {
-            throw new AlreadyAssignedException("Cannot add Reservation directly if it is already assigned to another Seance. Use Reservation.setSeance() to reassign.");
-        }
-
-        // to prevent infinite loops
-        if (this.reservations.contains(reservation)) return;
-
         this.reservations.add(reservation);
-
-        if (reservation.getSeance() != this) {
-            reservation.setSeance(this);
-        }
     }
     public void removeReservation(Reservation reservation) {
-        if (this.reservations.remove(reservation)) {
-            if (reservation.getSeance() == this) {
-                reservation.deleteSeance();
-            }
-        }
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        this.reservations.remove(reservation);
     }
 
     // advertisement
@@ -128,7 +109,6 @@ public class Seance {
         if (this.advertisements.contains(advertisement)) return;
 
         this.advertisements.add(advertisement);
-
         advertisement.addSeance(this);
     }
     public void removeAdvertisement(Advertisement advertisement) {
@@ -137,7 +117,6 @@ public class Seance {
         if (!this.advertisements.contains(advertisement)) return;
 
         this.advertisements.remove(advertisement);
-
         advertisement.removeSeance(this);
     }
 

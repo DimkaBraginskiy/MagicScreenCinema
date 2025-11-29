@@ -1,7 +1,6 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.HallTypeEnum;
-import com.magicscreencinema.domain.exception.AlreadyAssignedException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
@@ -57,27 +56,13 @@ public class Hall {
 
     //--association logic
     // seance
-    //no remove because Seance cannot exist without hall
-    public void addSeance(Seance seance) {
+    void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (this.seances.contains(seance)) return;
-
         this.seances.add(seance);
-
-        if (seance.getHall() != this) {
-            seance.setHall(this);
-        }
     }
-    public void reassignSeance(Hall targetHall, Seance seance) {
-        FieldValidator.validateObjectNotNull(targetHall, "Target Hall");
+    void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
-
-        if (this.seances.contains(seance)) {
-            this.seances.remove(seance);
-
-            targetHall.addSeance(seance);
-        }
+        this.seances.remove(seance);
     }
 
     //--setters

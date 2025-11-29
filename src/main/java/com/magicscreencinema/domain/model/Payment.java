@@ -31,31 +31,12 @@ public class Payment {
 
     public Payment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId, Reservation reservation){
         this(paymentMethod, paymentStatus, transactionId);
-        setReservation(reservation);
+        assignReservation(reservation);
     }
 
     //--association logic
-    public void setReservation(Reservation newReservation) {
-        FieldValidator.validateObjectNotNull(newReservation, "Reservation");
-
-        // prevent infinite recursion
-        if (this.reservation == newReservation) return;
-
-        if (this.reservation != null) {
-            Reservation oldReservation = this.reservation;
-            this.reservation = null;
-            oldReservation.deletePayment();
-        }
-
-        this.reservation = newReservation;
-
-        if (newReservation.getPayment() != this) {
-            newReservation.setPayment(this);
-        }
-    }
-
-    protected void deleteReservation() {
-        this.reservation = null;
+    void assignReservation(Reservation reservation) {
+        this.reservation = reservation;
     }
 
     //--getters
