@@ -95,6 +95,7 @@ public class Seance {
         newHall.addSeance(this);
     }
 
+    //reservation
     public void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
 
@@ -112,7 +113,6 @@ public class Seance {
             reservation.setSeance(this);
         }
     }
-
     public void removeReservation(Reservation reservation) {
         if (this.reservations.remove(reservation)) {
             if (reservation.getSeance() == this) {
