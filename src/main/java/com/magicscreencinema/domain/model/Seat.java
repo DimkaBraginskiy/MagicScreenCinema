@@ -71,9 +71,6 @@ public class Seat {
         return reservation;
     }
 
-    public void setHall(Hall hall) {
-        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
-    }
     void setReservation(Reservation reservation) {
         this.reservation = reservation;
     }
