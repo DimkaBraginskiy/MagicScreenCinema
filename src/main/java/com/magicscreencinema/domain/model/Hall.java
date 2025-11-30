@@ -23,6 +23,7 @@ public class Hall {
     @OneToMany(cascade = {Cascade.SAVE, Cascade.DELETE})
     private Set<Seat> seats;
     private Set<Seance> seances;
+    private Set<Shift> shifts;
 
     //--constructors
     private Hall() {}
@@ -34,6 +35,7 @@ public class Hall {
 
         seances = new HashSet<>();
         seats = new HashSet<>();
+        shifts = new HashSet<>();
     }
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, Set<Seance> seances) {
         this(hallNumber, hallType, maxRow, rowWidth);
@@ -64,6 +66,23 @@ public class Hall {
 
         this.seats.add(newSeat);
         return newSeat;
+    }
+
+    //--association logic
+    // shift
+    void addShift(Shift shift){
+        FieldValidator.validateObjectNotNull(shift, "shift");
+
+        if(this.shifts.contains(shift)){
+            return;
+        }
+
+        this.shifts.add(shift);
+    }
+
+    void removeShift(Shift shift){
+        FieldValidator.validateObjectNotNull(shift, "shift");
+        this.shifts.remove(shift);
     }
 
     //--setters
@@ -104,5 +123,8 @@ public class Hall {
     }
     public int getHallNumber() {
         return hallNumber;
+    }
+    public Set<Shift> getShifts(){
+        return new HashSet<>(shifts);
     }
 }

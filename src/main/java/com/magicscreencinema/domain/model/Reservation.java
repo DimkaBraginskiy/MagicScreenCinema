@@ -25,8 +25,11 @@ public class Reservation {
 
     private Seance seance;
     private Set<Payment> payments;
+
+    private Customer customer;
+
     private Reservation() {}
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats) {
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Customer customer) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
@@ -35,10 +38,24 @@ public class Reservation {
         for(Seat seat : seats) {
             addSeat(seat);
         }
+
+        assignCustomer(customer);
     }
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Discount discount) {
-        this(reservationTime, status, seance, seats);
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Customer customer, Discount discount) {
+        this(reservationTime, status, seance, seats, customer);
         assignDiscount(discount);
+    }
+
+    public void assignCustomer(Customer customer){
+        FieldValidator.validateObjectNotNull(customer, "customer");
+
+        this.customer = customer;
+
+        customer.addReservation(this);
+    }
+
+    public Customer getCustomer(){
+        return this.customer;
     }
 
     public void assignSeance(Seance seance) {
