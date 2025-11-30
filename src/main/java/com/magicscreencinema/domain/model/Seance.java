@@ -92,25 +92,14 @@ public class Seance {
     }
 
     //reservation
-    public void addReservation(Reservation reservation) {
+    void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
-
-        if (this.reservations.contains(reservation)) return;
-
-        if (reservation.getSeance() != null && reservation.getSeance() != this) {
-            reservation.getSeance().removeReservation(reservation);
-        }
-
         this.reservations.add(reservation);
-        reservation.setSeance(this);
     }
-    public void removeReservation(Reservation reservation) {
-        FieldValidator.validateObjectNotNull(reservation, "Reservation");
 
-        if (this.reservations.contains(reservation)) {
-            this.reservations.remove(reservation);
-            reservation.setSeance(null);
-        }
+    void removeReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        this.reservations.remove(reservation);
     }
 
     // advertisement

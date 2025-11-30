@@ -20,35 +20,74 @@ public class Reservation {
     //--associations
     @ManyToOne()
     private Discount discount;
-    @OneToMany(cascade = {Cascade.DELETE, Cascade.SAVE}, fetch = Fetch.EAGER)
-    private List<Seat> seats;
+    @OneToMany(fetch = Fetch.EAGER)
+    private Set<Seat> seats;
 
     private Seance seance;
     private Set<Payment> payments;
     private Reservation() {}
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status) {
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
         this.payments = new HashSet<>();
+        assignSeance(seance);
+        for(Seat seat : seats) {
+            addSeat(seat);
+        }
     }
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Discount discount, List<Seat> seats, Seance seance) {
-        this(reservationTime, status);
-
-        // this.discount = FieldValidator.validateObjectNotNull(discount, "discount"); // TODO dima eto twoe
-        // this.seats = FieldValidator.validateSeatList(seats, "Seats"); // TODO dima eto twoe
-
-        setSeance(seance);
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Discount discount) {
+        this(reservationTime, status, seance, seats);
+        assignDiscount(discount);
     }
 
-    void setSeance(Seance seance) {
+    public void assignSeance(Seance seance) {
+        FieldValidator.validateObjectNotNull(seance, "Seance");
+        seance.addReservation(this);
         this.seance = seance;
+    }
+
+    public void changeSeance(Seance newSeance){
+        FieldValidator.validateObjectNotNull(newSeance, "Seance");
+        this.seance.removeReservation(this);
+        newSeance.addReservation(this);
+        this.seance = newSeance;
     }
 
     public Payment addPayment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId) {
         Payment newPayment = new Payment(paymentMethod, paymentStatus, transactionId, this);
         this.payments.add(newPayment);
         return newPayment;
+    }
+
+    public void assignDiscount(Discount discount) {
+        FieldValidator.validateObjectNotNull(discount, "Discount");
+        this.discount = discount;
+        this.discount.addReservation(this);
+    }
+
+    public void removeDiscount() {
+        if (this.discount != null) {
+            this.discount.removeReservation(this);
+            this.discount = null;
+        }
+    }
+
+    public void addSeat(Seat seat) {
+        FieldValidator.validateObjectNotNull(seat, "Seat");
+        if (this.seats == null) {
+            this.seats = new HashSet<>();
+        }
+        this.seats.add(seat);
+        seat.setReservation(this);
+    }
+
+    public void removeSeat(Seat seat) {
+        FieldValidator.validateObjectNotNull(seat, "Seat");
+        if (this.seats.contains(seat)) {
+            this.seats.remove(seat);
+            seat.setReservation(null);
+        }
     }
 
     public Optional<Payment> getCompletedPayment() {
@@ -66,9 +105,6 @@ public class Reservation {
     public void setDiscount(Discount discount) {
         this.discount = discount;
     }
-    public void setSeats(List<Seat> seats) {
-        this.seats = FieldValidator.validateSeatList(seats, "Seats");
-    }
 
     public UUID getReservationNumber() {
         return reservationNumber;
@@ -82,11 +118,11 @@ public class Reservation {
     public Optional<Discount> getDiscount() {
         return Optional.ofNullable(discount);
     }
-    public List<Seat> getSeats() {
-        return seats;
+    public Set<Seat> getSeats() {
+        return Collections.unmodifiableSet(seats);
     }
     public double getTotalPrice() {
-        List<Seat> seatList = Objects.requireNonNullElse(seats, List.of());
+        Set<Seat> seatList = Objects.requireNonNullElse(seats, Set.of());
 
         double total = 0.0;
         for (Seat seat : seatList) {

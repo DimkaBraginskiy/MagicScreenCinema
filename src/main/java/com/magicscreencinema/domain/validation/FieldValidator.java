@@ -7,6 +7,7 @@ import com.magicscreencinema.domain.model.Hall;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -198,19 +199,6 @@ public final class FieldValidator {
         }
 
         return seats;
-    }
-
-    /**
-     * validates a seat List for now being null and empty
-     */
-    public static List<Seat> validateSeatList(List<Seat> seats, String fieldName) {
-        validateObjectNotNull(seats, fieldName);
-
-        if (seats.isEmpty()) {
-            throw new EmptySeatListException(fieldName + " can not be empty");
-        }
-
-        return List.copyOf(seats);
     }
 
     /**
