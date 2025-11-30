@@ -172,33 +172,34 @@ public final class FieldValidator {
     }
 
     /**
-     * validates that all seats are not null
      * validates seatRows > maxRow -> throw InvalidRowException
      * validates seatNumber > rowWidth -> throw InvalidSeatNumberException
-     * connects every seat to passed as an argument hall
      */
-    public static List<Seat> validateSeatsInHallNotNull(List<Seat> seats, Hall hall) {
-        validateObjectNotNull(seats, "Seats list");
-        validateObjectNotNull(hall, "Hall");
+    public static void validateSeatDimension(Seat seat, Hall hall) {
+        validateObjectNotNull(seat, "seat");
+        validateObjectNotNull(hall, "hall");
 
         int maxRow = hall.getMaxRow();
         int rowWidth = hall.getRowWidth();
 
-        for (Seat seat : seats) {
-            validateObjectNotNull(seat, "Seat");
-
-            if (seat.getRow() > maxRow) {
-                throw new InvalidRowException("Seat row exceeds hall max rows.");
-            }
-
-            if (seat.getSeatNumber() > rowWidth) {
-                throw new InvalidSeatNumberException("Seat number exceeds hall row width.");
-            }
-
-            seat.setHall(hall);
+        if (seat.getRow() > maxRow) {
+            throw new InvalidRowException("Seat row exceeds hall max rows.");
         }
 
-        return seats;
+        if (seat.getSeatNumber() > rowWidth) {
+            throw new InvalidSeatNumberException("Seat number exceeds hall row width.");
+        }
+    }
+
+    public static void validateSeatNotDuplicate(Seat newSeat, Hall hall){
+        for(Seat seat : hall.getSeats()){
+            if(seat.getSeatNumber() == newSeat.getSeatNumber() && seat.getRow() == newSeat.getRow()){
+                throw new DuplicateSeatException(
+                        "Seat with number " + newSeat.getSeatNumber() +
+                        " and row " + newSeat.getRow() + " already exists"
+                );
+            }
+        }
     }
 
     /**

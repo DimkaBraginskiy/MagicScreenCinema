@@ -21,37 +21,27 @@ public class Hall {
 
     //--associations
     @OneToMany(cascade = {Cascade.SAVE, Cascade.DELETE})
-    private List<Seat> seats; //TODO change to set
+    private Set<Seat> seats;
     private Set<Seance> seances;
 
     //--constructors
-    public Hall() {
-        seances = new HashSet<>();
-        //TODO add seats = new HashSet<>();
-    }
+    private Hall() {}
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth) {
-        this();
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
         this.hallType = FieldValidator.validateObjectNotNull(hallType, "Hall Type");
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
+
+        seances = new HashSet<>();
+        seats = new HashSet<>();
     }
-    public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, List<Seat> seats, Set<Seance> seances) {
+    public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, Set<Seance> seances) {
         this(hallNumber, hallType, maxRow, rowWidth);
-        this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
 
         FieldValidator.validateObjectNotNull(seances, "seances");
         for (Seance seance : seances) {
             addSeance(seance);
         }
-
-
-        //TODO dima
-        //FieldValidator.validateObjectNotNull(seats, "seats");
-        // for (Seat seat : seats) {
-        //      addSeat(seat);
-        // }
-        //
     }
 
     //--association logic
@@ -65,12 +55,30 @@ public class Hall {
         this.seances.remove(seance);
     }
 
+    //--association logic
+    // seat
+    public Seat addSeat(int seatNumber, int row){
+        Seat newSeat = new Seat(seatNumber, row, this);
+        FieldValidator.validateSeatDimension(newSeat, this);
+        FieldValidator.validateSeatNotDuplicate(newSeat, this);
+
+        this.seats.add(newSeat);
+        return newSeat;
+    }
+    public void removeSeat(Seat seat){
+        FieldValidator.validateObjectNotNull(seat, "seat");
+
+        if(!this.seats.contains(seat)) return;
+
+        if(this.seats.size() == 1) return;
+
+        this.seats.remove(seat);
+
+    }
+
     //--setters
     public void setRowWidth(int rowWidth) {
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
-    }
-    public void setSeats(List<Seat> seats) {
-        this.seats = FieldValidator.validateSeatsInHallNotNull(seats, this);
     }
     public void setHallNumber(int hallNumber) {
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
@@ -98,8 +106,8 @@ public class Hall {
     public HallTypeEnum getHallType() {
         return hallType;
     }
-    public List<Seat> getSeats() {
-        return seats;
+    public Set<Seat> getSeats() {
+        return new HashSet<>(seats);
     }
     public int getRowWidth() {
         return rowWidth;

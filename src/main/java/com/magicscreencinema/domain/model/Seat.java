@@ -19,7 +19,7 @@ public class Seat {
     private Hall hall;
     private Reservation reservation;
 
-    public Seat(int seatNumber, int row, Hall hall) {
+    Seat(int seatNumber, int row, Hall hall) {
         this.seatNumber = FieldValidator.validatePositiveNumber(seatNumber, "Seat Number");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
 
