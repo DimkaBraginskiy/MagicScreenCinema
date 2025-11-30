@@ -65,16 +65,6 @@ public class Hall {
         this.seats.add(newSeat);
         return newSeat;
     }
-    public void removeSeat(Seat seat){
-        FieldValidator.validateObjectNotNull(seat, "seat");
-
-        if(!this.seats.contains(seat)) return;
-
-        if(this.seats.size() == 1) return;
-
-        this.seats.remove(seat);
-
-    }
 
     //--setters
     public void setRowWidth(int rowWidth) {
