@@ -10,36 +10,22 @@ import java.util.UUID;
 
 @ElementCollection(name = "payments")
 public class Payment {
-    //--basic fields
     @Id
     private UUID id;
     private PaymentMethodEnum paymentMethod;
     private PaymentStatusEnum paymentStatus;
     private String transactionId;
-
-    //--associations
     private Reservation reservation;
 
-    //--constructors
     private Payment() {}
-    public Payment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId) {
+    Payment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId, Reservation reservation) {
         this.paymentMethod = FieldValidator.validateObjectNotNull(paymentMethod, "Payment Method");
         this.paymentStatus = FieldValidator.validateObjectNotNull(paymentStatus, "Payment Status");
         this.transactionId = FieldValidator.validateNullOrEmptyString(transactionId, "Transaction ID");
+        this.reservation = FieldValidator.validateObjectNotNull(reservation, "Reservation");
         id = UUID.randomUUID();
     }
 
-    public Payment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId, Reservation reservation){
-        this(paymentMethod, paymentStatus, transactionId);
-        assignReservation(reservation);
-    }
-
-    //--association logic
-    void assignReservation(Reservation reservation) {
-        this.reservation = reservation;
-    }
-
-    //--getters
     public UUID getId() {
         return id;
     }
@@ -55,8 +41,6 @@ public class Payment {
     public Reservation getReservation() {
         return reservation;
     }
-
-    //--setters
     public void setPaymentMethod(PaymentMethodEnum paymentMethod) {
         this.paymentMethod = FieldValidator.validateObjectNotNull(paymentMethod, "Payment Method");
     }

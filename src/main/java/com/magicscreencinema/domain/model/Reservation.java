@@ -1,14 +1,13 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.enums.PaymentMethodEnum;
+import com.magicscreencinema.domain.enums.PaymentStatusEnum;
 import com.magicscreencinema.domain.enums.ReservationStatusEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @ElementCollection(name = "reservations")
 public class Reservation {
@@ -25,60 +24,39 @@ public class Reservation {
     private List<Seat> seats;
 
     private Seance seance;
-    private Payment payment;
-
-    //--constructors
+    private Set<Payment> payments;
     private Reservation() {}
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
+        this.payments = new HashSet<>();
     }
-    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Discount discount, List<Seat> seats, Seance seance, Payment payment) {
+    public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Discount discount, List<Seat> seats, Seance seance) {
         this(reservationTime, status);
 
         // this.discount = FieldValidator.validateObjectNotNull(discount, "discount"); // TODO dima eto twoe
         // this.seats = FieldValidator.validateSeatList(seats, "Seats"); // TODO dima eto twoe
 
         setSeance(seance);
-        assignPayment(payment);
     }
 
-    //--association logic
-    //seance
     void setSeance(Seance seance) {
         this.seance = seance;
     }
 
-    //payment
-    public void assignPayment(Payment newPayment) {
-        // if we are just clearing the payment (setting null)
-        if (newPayment == null) {
-            if (this.payment != null) {
-                this.payment.assignReservation(null); // clear the reverse side (setting to null)
-                this.payment = null;
-            }
-            return;
-        }
-
-        FieldValidator.validateObjectNotNull(newPayment, "Payment");
-        if (this.payment == newPayment) return;
-
-        // if the new payment is already assigned to ANOTHER reservation
-        if (newPayment.getReservation() != null && newPayment.getReservation() != this) {
-            newPayment.getReservation().assignPayment(null);
-        }
-
-        // unlink ourselves from our currently assigned payment (if any)
-        if (this.payment != null) {
-            this.payment.assignReservation(null);
-        }
-
-        this.payment = newPayment;
-        this.payment.assignReservation(this);
+    public Payment addPayment(PaymentMethodEnum paymentMethod, PaymentStatusEnum paymentStatus, String transactionId) {
+        Payment newPayment = new Payment(paymentMethod, paymentStatus, transactionId, this);
+        this.payments.add(newPayment);
+        return newPayment;
     }
 
-    //--setters
+    public Optional<Payment> getCompletedPayment() {
+        return payments.stream()
+                .filter(payment -> payment.getPaymentStatus() == PaymentStatusEnum.COMPLETED)
+                .findFirst();
+    }
+
     public void setReservationTime(LocalDateTime reservationTime) {
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
     }
@@ -92,7 +70,6 @@ public class Reservation {
         this.seats = FieldValidator.validateSeatList(seats, "Seats");
     }
 
-    //--getters
     public UUID getReservationNumber() {
         return reservationNumber;
     }
@@ -125,7 +102,7 @@ public class Reservation {
     public Seance getSeance() {
         return this.seance;
     }
-    public Payment getPayment() {
-        return this.payment;
+    public Set<Payment> getPayments() {
+        return Collections.unmodifiableSet(payments);
     }
 }
