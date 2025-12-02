@@ -28,7 +28,9 @@ public class Movie {
     //--constructors
     private Movie() {
         seances = new HashSet<>();
+        genres = new HashSet<>();
     }
+
     public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration) {
         this();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
@@ -38,17 +40,18 @@ public class Movie {
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
         id = UUID.randomUUID();
     }
+
     public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration,
                  Set<Seance> seances, Set<Genre> genres) {
-        this(name, ageRestriction, description ,premiereDate, movieDuration);
+        this(name, ageRestriction, description, premiereDate, movieDuration);
 
-        FieldValidator.validateObjectNotNull(seances, "seances");
-        for (Seance seance : seances){
+        FieldValidator.validateObjectNotNull(seances, "Seances");
+        for (Seance seance : seances) {
             addSeance(seance);
         }
 
-        FieldValidator.validateObjectNotNull(genres, "genres");
-        for (Genre genre : genres){
+        FieldValidator.validateObjectNotNull(genres, "Genres");
+        for (Genre genre : genres) {
             addGenre(genre);
         }
     }
@@ -59,6 +62,7 @@ public class Movie {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.add(seance);
     }
+
     void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.remove(seance);
@@ -93,24 +97,31 @@ public class Movie {
     public Set<Genre> getGenres() {
         return new HashSet<>(genres);
     }
+
     public Set<Seance> getSeances() {
         return new HashSet<>(seances);
     }
+
     public String getName() {
         return name;
     }
+
     public AgeRestrictionEnum getAgeRestriction() {
         return ageRestriction;
     }
+
     public long getMovieDuration() {
         return movieDuration;
     }
+
     public LocalDate getPremiereDate() {
         return premiereDate;
     }
+
     public UUID getId() {
         return id;
     }
+
     public String getDescription() {
         return description;
     }
@@ -119,15 +130,19 @@ public class Movie {
     public void setName(String name) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
     }
+
     public void setAgeRestriction(AgeRestrictionEnum ageRestriction) {
         this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
     }
+
     public void setDescription(String description) {
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
     }
+
     public void setPremiereDate(LocalDate premiereDate) {
         this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
     }
+
     public void setMovieDuration(long movieDuration) {
         this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
     }

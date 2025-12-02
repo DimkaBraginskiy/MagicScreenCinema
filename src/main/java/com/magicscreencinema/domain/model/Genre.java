@@ -21,15 +21,17 @@ public class Genre {
     private Genre() {
         this.movies = new HashSet<>();
     }
+
     public Genre(String name) {
         this();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.id = UUID.randomUUID();
     }
-    public Genre(UUID id, String name, Set<Movie> movies) {
+
+    public Genre(String name, Set<Movie> movies) {
         this(name);
 
-        FieldValidator.validateObjectNotNull(movies, "movies");
+        FieldValidator.validateObjectNotNull(movies, "Movies");
         for (Movie movie : movies) {
             addMovie(movie);
         }
@@ -40,19 +42,27 @@ public class Genre {
     public void addMovie(Movie movie) {
         FieldValidator.validateObjectNotNull(movie, "Movie");
         this.movies.add(movie);
+        movie.addGenre(this);
     }
+
     public void removeMovie(Movie movie) {
         FieldValidator.validateObjectNotNull(movie, "Movie");
+
+        if (!this.movies.contains(movie)) return;
+
         this.movies.remove(movie);
+        movie.removeGenre(this);
     }
 
     //--getters
     public Set<Movie> getMovies() {
         return new HashSet<>(movies);
     }
+
     public UUID getId() {
         return id;
     }
+
     public String getName() {
         return name;
     }

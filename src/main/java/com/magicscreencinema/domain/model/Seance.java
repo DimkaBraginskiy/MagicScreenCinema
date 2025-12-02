@@ -29,7 +29,7 @@ public class Seance {
     private Set<Advertisement> advertisements;
 
     //--constructors
-    public Seance() {
+    private Seance() {
         this.reservations = new HashSet<>();
         this.advertisements = new HashSet<>();
     }
