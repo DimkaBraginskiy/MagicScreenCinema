@@ -24,6 +24,7 @@ public class Advertisement {
     private Advertisement() {
         this.seances = new HashSet<>();
     }
+
     public Advertisement(String name, long duration, String advertiserName) {
         this();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
@@ -31,39 +32,54 @@ public class Advertisement {
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");
         id = UUID.randomUUID();
     }
-    public Advertisement(String name, long duration, String advertiserName, Set<Seance> seances){
+
+    public Advertisement(String name, long duration, String advertiserName, Set<Seance> seances) {
         this(name, duration, advertiserName);
 
-        FieldValidator.validateObjectNotNull(seances, "seances");
-        for (Seance seance : seances){
+        FieldValidator.validateObjectNotNull(seances, "Seances");
+        for (Seance seance : seances) {
             addSeance(seance);
         }
     }
 
     //--association logic
     //seance
-    void addSeance(Seance seance) {
+    public void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
+        if (this.seances.contains(seance)) return;
         this.seances.add(seance);
+        seance.addAdvertisement(this);
     }
-    void removeSeance(Seance seance) {
+
+    public void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
+        if (!this.seances.contains(seance)) return;
+
+        if (this.seances.size() <= 1) {
+            throw new IllegalStateException("Cannot remove Seance. Advertisement must have at least one Seance.");
+        }
+
         this.seances.remove(seance);
+        seance.removeAdvertisement(this);
     }
 
     //--getters
     public UUID getId() {
         return id;
     }
+
     public String getName() {
         return name;
     }
+
     public long getDuration() {
         return duration;
     }
+
     public String getAdvertiserName() {
         return advertiserName;
     }
+
     public Set<Seance> getSeances() {
         return new HashSet<>(seances);
     }
@@ -72,9 +88,11 @@ public class Advertisement {
     public void setDuration(long duration) {
         this.duration = FieldValidator.validatePositiveNumber(duration, "Duration");
     }
+
     public void setAdvertiserName(String advertiserName) {
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");
     }
+
     public void setName(String name) {
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
     }

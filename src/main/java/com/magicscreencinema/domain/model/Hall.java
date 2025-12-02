@@ -5,7 +5,6 @@ import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +25,9 @@ public class Hall {
     private Set<Shift> shifts;
 
     //--constructors
-    private Hall() {}
+    private Hall() {
+    }
+
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth) {
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
         this.hallType = FieldValidator.validateObjectNotNull(hallType, "Hall Type");
@@ -37,10 +38,11 @@ public class Hall {
         seats = new HashSet<>();
         shifts = new HashSet<>();
     }
+
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, Set<Seance> seances) {
         this(hallNumber, hallType, maxRow, rowWidth);
 
-        FieldValidator.validateObjectNotNull(seances, "seances");
+        FieldValidator.validateObjectNotNull(seances, "Seances");
         for (Seance seance : seances) {
             addSeance(seance);
         }
@@ -48,18 +50,19 @@ public class Hall {
 
     //--association logic
     // seance
-    void addSeance(Seance seance) {
+    public void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.add(seance);
     }
-    void removeSeance(Seance seance) {
+
+    public void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.remove(seance);
     }
 
     //--association logic
     // seat
-    public Seat addSeat(int seatNumber, int row){
+    public Seat addSeat(int seatNumber, int row) {
         Seat newSeat = new Seat(seatNumber, row, this);
         FieldValidator.validateSeatDimension(newSeat, this);
         FieldValidator.validateSeatNotDuplicate(newSeat, this);
@@ -70,17 +73,17 @@ public class Hall {
 
     //--association logic
     // shift
-    void addShift(Shift shift){
+    void addShift(Shift shift) {
         FieldValidator.validateObjectNotNull(shift, "shift");
 
-        if(this.shifts.contains(shift)){
+        if (this.shifts.contains(shift)) {
             return;
         }
 
         this.shifts.add(shift);
     }
 
-    void removeShift(Shift shift){
+    void removeShift(Shift shift) {
         FieldValidator.validateObjectNotNull(shift, "shift");
         this.shifts.remove(shift);
     }
@@ -89,15 +92,19 @@ public class Hall {
     public void setRowWidth(int rowWidth) {
         this.rowWidth = FieldValidator.validatePositiveNumber(rowWidth, "Row Width");
     }
+
     public void setHallNumber(int hallNumber) {
         this.hallNumber = FieldValidator.validatePositiveNumber(hallNumber, "Hall Number");
     }
+
     public void setHallType(HallTypeEnum hallType) {
         this.hallType = FieldValidator.validateObjectNotNull(hallType, "Hall Type");
     }
+
     public void setMaxRow(int maxRow) {
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
     }
+
     public void setId(UUID id) {
         this.id = id;
     }
@@ -106,25 +113,32 @@ public class Hall {
     public Set<Seance> getSeances() {
         return new HashSet<>(seances);
     }
+
     public UUID getId() {
         return id;
     }
+
     public int getMaxRow() {
         return maxRow;
     }
+
     public HallTypeEnum getHallType() {
         return hallType;
     }
+
     public Set<Seat> getSeats() {
         return new HashSet<>(seats);
     }
+
     public int getRowWidth() {
         return rowWidth;
     }
+
     public int getHallNumber() {
         return hallNumber;
     }
-    public Set<Shift> getShifts(){
+
+    public Set<Shift> getShifts() {
         return new HashSet<>(shifts);
     }
 }

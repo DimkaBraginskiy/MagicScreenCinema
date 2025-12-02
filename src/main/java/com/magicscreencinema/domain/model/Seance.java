@@ -33,6 +33,7 @@ public class Seance {
         this.reservations = new HashSet<>();
         this.advertisements = new HashSet<>();
     }
+
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
         this();
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
@@ -44,6 +45,7 @@ public class Seance {
         assignHall(hall);
         assignMovie(movie);
     }
+
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall,
                   Set<Reservation> reservations, Set<Advertisement> advertisements) {
         this(startTime, isCancelled, movie, hall);
@@ -53,7 +55,7 @@ public class Seance {
             addReservation(reservation);
         }
 
-        FieldValidator.validateObjectNotNull(advertisements, "advertisements");
+        FieldValidator.validateObjectNotNull(advertisements, "Advertisements");
         for (Advertisement advertisement : advertisements) {
             addAdvertisement(advertisement);
         }
@@ -111,10 +113,15 @@ public class Seance {
         this.advertisements.add(advertisement);
         advertisement.addSeance(this);
     }
+
     public void removeAdvertisement(Advertisement advertisement) {
         FieldValidator.validateObjectNotNull(advertisement, "Advertisement");
 
         if (!this.advertisements.contains(advertisement)) return;
+
+        if (this.advertisements.size() <= 1) {
+            throw new IllegalStateException("Cannot remove Advertisement '" + advertisement.getName() + "'. Seance must have at least one Advertisement.");
+        }
 
         this.advertisements.remove(advertisement);
         advertisement.removeSeance(this);
@@ -124,26 +131,33 @@ public class Seance {
     public Set<Reservation> getReservations() {
         return new HashSet<>(reservations);
     }
+
     public Set<Advertisement> getAdvertisements() {
         return new HashSet<>(advertisements);
     }
+
     public static int getAdvertisementsTime() {
         return ADVERTISEMENTS_TIME;
     }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
+
     public LocalDateTime getEndTime() {
         return startTime
                 .plus(Duration.ofMillis(movie.getMovieDuration()))
                 .plusMinutes(ADVERTISEMENTS_TIME);
     }
+
     public Hall getHall() {
         return hall;
     }
+
     public Movie getMovie() {
         return movie;
     }
+
     public boolean isCancelled() {
         return isCancelled;
     }
@@ -152,6 +166,7 @@ public class Seance {
     public void setCancelled(boolean cancelled) {
         this.isCancelled = cancelled;
     }
+
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
     }
