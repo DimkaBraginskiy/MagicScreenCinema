@@ -16,8 +16,7 @@ public class StaffTest {
     public void constructor_WithValidParametersAndNullManagerField_ShouldCreateStaff() {
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME,
-                null);
+                LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
 
         assertEquals("Test first", staff.getFirstName());
         assertEquals("Test last", staff.getLastName());
@@ -35,8 +34,7 @@ public class StaffTest {
     public void constructor_WithValidParametersAndValidManagerField_ShouldCreateStaff() {
         Staff m = new Staff("Test first1", "Test last1", "1234567",
                 "example1@gmail.com", "pass1", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME,
-                null);
+                LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
                 LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, m);
@@ -130,7 +128,7 @@ public class StaffTest {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
             staff.setHireDate(null);
         });
         assertEquals("Hire Date can not be null", exception.getMessage());
@@ -140,7 +138,7 @@ public class StaffTest {
     public void setHireDate_WithValidHireDateParameter_ShouldChangeHireDate() {
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME, null);
+                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME);
         staff.setHireDate(LocalDate.of(2022, 10, 3));
 
         assertEquals(LocalDate.of(2022, 10, 3), staff.getHireDate());
@@ -151,7 +149,7 @@ public class StaffTest {
         NonPositiveValueException exception = assertThrows(NonPositiveValueException.class, () -> {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
             staff.setSalary(0);
         });
         assertEquals("Salary must be a positive value ( > 0).", exception.getMessage());
@@ -162,7 +160,7 @@ public class StaffTest {
         NonPositiveValueException exception = assertThrows(NonPositiveValueException.class, () -> {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
             staff.setSalary(-29.6);
         });
         assertEquals("Salary must be a positive value ( > 0).", exception.getMessage());
@@ -172,7 +170,7 @@ public class StaffTest {
     public void setSalary_WithValidSalaryParameter_ShouldChangeSalary() {
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME, null);
+                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME);
         staff.setSalary(10_000);
 
         assertEquals(10_000, staff.getSalary(), 0.001);
@@ -183,7 +181,7 @@ public class StaffTest {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
             staff.setContractType(null);
         });
         assertEquals("Contract Type can not be null", exception.getMessage());
@@ -193,7 +191,7 @@ public class StaffTest {
     public void setContractType_WithValidContractTypeParameter_ShouldChangeContractType() {
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME, null);
+                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.PART_TIME);
         staff.setContractType(ContractTypeEnum.FULL_TIME);
 
         assertEquals(ContractTypeEnum.FULL_TIME, staff.getContractType());
@@ -204,7 +202,7 @@ public class StaffTest {
         RecursionException exception = assertThrows(RecursionException.class, () -> {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                    LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
             staff.setManager(staff);
         });
         assertEquals("An object cannot have a recursive association with itself", exception.getMessage());
@@ -214,10 +212,10 @@ public class StaffTest {
     public void setManager_WithValidParameter_ShouldThrowRecursionException() {
         Staff m = new Staff("Test first1", "Test last1", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
-                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME, null);
+                LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
         staff.setManager(m);
 
         Staff manager = staff.getManager().get();

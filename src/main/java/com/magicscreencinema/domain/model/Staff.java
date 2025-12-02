@@ -24,9 +24,9 @@ public class Staff extends Person {
     private Staff manager;
 
     @OneToMany
-    private Set<Staff> managedStaff;
+    private Set<Staff> managedStaff=new HashSet<>();
 
-    private Set<Shift> shifts;
+    private Set<Shift> shifts=new HashSet<>();
 
     public Staff(String firstName, String lastName, String phoneNumber, String email, String password,
                  LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
@@ -42,16 +42,21 @@ public class Staff extends Person {
         assignManager(manager);
     }
 
-    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
+    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,
+                 LocalDate hireDate, double salary, ContractTypeEnum contractType) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
+        this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
+        this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
+        this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
     }
+
     private Staff() {
     }
 
     //--association logic
     // manager
-    public void assignManager(Staff manager){
-        if(this.manager != null){
+    public void assignManager(Staff manager) {
+        if (this.manager != null) {
             this.manager.removeManagedStaff(this);
         }
 
@@ -62,29 +67,29 @@ public class Staff extends Person {
 
     //--association logic
     // staff
-    void addManagedStaff(Staff staff){
+    void addManagedStaff(Staff staff) {
         FieldValidator.validateObjectNotNull(staff, "staff");
         managedStaff.add(staff);
     }
 
-    void removeManagedStaff(Staff staff){
+    void removeManagedStaff(Staff staff) {
         FieldValidator.validateObjectNotNull(staff, "staff");
         managedStaff.remove(staff);
     }
 
     //--association logic
     // shift
-    void addShift(Shift shift){
+    void addShift(Shift shift) {
         FieldValidator.validateObjectNotNull(shift, "shift");
 
-        if(this.shifts.contains(shift)){
+        if (this.shifts.contains(shift)) {
             return;
         }
 
         this.shifts.add(shift);
     }
 
-    void removeShift(Shift shift){
+    void removeShift(Shift shift) {
         FieldValidator.validateObjectNotNull(shift, "shift");
         this.shifts.remove(shift);
     }
@@ -120,11 +125,12 @@ public class Staff extends Person {
     public Optional<Staff> getManager() {
         return Optional.ofNullable(manager);
     }
-    public Set<Shift> getShifts(){
+
+    public Set<Shift> getShifts() {
         return new HashSet<>(shifts);
     }
 
-    public Set<Staff> getManagedStaff(){
+    public Set<Staff> getManagedStaff() {
         return new HashSet<>(managedStaff);
     }
 }
