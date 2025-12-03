@@ -58,12 +58,12 @@ public class Movie {
 
     //--association logic
     //seance
-    public void addSeance(Seance seance) {
+    void addSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.add(seance);
     }
 
-    public void removeSeance(Seance seance) {
+    void removeSeance(Seance seance) {
         FieldValidator.validateObjectNotNull(seance, "Seance");
         this.seances.remove(seance);
     }

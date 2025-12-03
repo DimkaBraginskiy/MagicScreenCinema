@@ -28,33 +28,39 @@ public class Reservation {
 
     private Customer customer;
 
-    private Reservation() {}
+    private Reservation() {
+    }
+
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Customer customer) {
         this.reservationNumber = UUID.randomUUID();
         this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
         this.payments = new HashSet<>();
         assignSeance(seance);
-        for(Seat seat : seats) {
+        for (Seat seat : seats) {
             addSeat(seat);
         }
 
         assignCustomer(customer);
     }
+
     public Reservation(LocalDateTime reservationTime, ReservationStatusEnum status, Seance seance, Set<Seat> seats, Customer customer, Discount discount) {
         this(reservationTime, status, seance, seats, customer);
         assignDiscount(discount);
     }
 
-    public void assignCustomer(Customer customer){
-        FieldValidator.validateObjectNotNull(customer, "customer");
+    public void assignCustomer(Customer customer) {
+        FieldValidator.validateObjectNotNull(customer, "Customer");
+        if (this.customer != null) {
+            this.customer.removeReservation(this);
+        }
 
         this.customer = customer;
 
         customer.addReservation(this);
     }
 
-    public Customer getCustomer(){
+    public Customer getCustomer() {
         return this.customer;
     }
 
@@ -64,7 +70,7 @@ public class Reservation {
         this.seance = seance;
     }
 
-    public void changeSeance(Seance newSeance){
+    public void changeSeance(Seance newSeance) {
         FieldValidator.validateObjectNotNull(newSeance, "Seance");
         this.seance.removeReservation(this);
         newSeance.addReservation(this);
@@ -114,11 +120,20 @@ public class Reservation {
     }
 
     public void setReservationTime(LocalDateTime reservationTime) {
-        this.reservationTime = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
+        FieldValidator.validateObjectNotNull(customer, "Customer");
+        LocalDateTime validated = FieldValidator.validateDateTimeNotInThePast(reservationTime, "Reservation Time");
+
+        ReservationKey oldKey = new ReservationKey(this.reservationNumber, this.reservationTime);
+        Reservation oldReservation = customer.getReservations().get(oldKey);
+        customer.removeReservation(oldReservation);
+        this.reservationTime = validated;
+        customer.addReservation(this);
     }
+
     public void setStatus(ReservationStatusEnum status) {
         this.status = FieldValidator.validateObjectNotNull(status, "Status");
     }
+
     public void setDiscount(Discount discount) {
         this.discount = discount;
     }
@@ -126,18 +141,23 @@ public class Reservation {
     public UUID getReservationNumber() {
         return reservationNumber;
     }
+
     public LocalDateTime getReservationTime() {
         return reservationTime;
     }
+
     public ReservationStatusEnum getStatus() {
         return status;
     }
+
     public Optional<Discount> getDiscount() {
         return Optional.ofNullable(discount);
     }
+
     public Set<Seat> getSeats() {
         return Collections.unmodifiableSet(seats);
     }
+
     public double getTotalPrice() {
         Set<Seat> seatList = Objects.requireNonNullElse(seats, Set.of());
 
@@ -152,9 +172,11 @@ public class Reservation {
 
         return Math.max(0.0, total);
     }
+
     public Seance getSeance() {
         return this.seance;
     }
+
     public Set<Payment> getPayments() {
         return Collections.unmodifiableSet(payments);
     }

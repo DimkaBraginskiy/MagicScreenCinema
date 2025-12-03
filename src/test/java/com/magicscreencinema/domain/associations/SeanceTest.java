@@ -299,13 +299,15 @@ public class SeanceTest {
 
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall, new HashSet<>(), Set.of(ad1, ad2));
+        Seance seance2 = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
+                false, movie, hall, new HashSet<>(), Set.of(ad1, ad2));
 
         seance.removeAdvertisement(ad1);
 
         //reverse check
         assertTrue(seance.getAdvertisements().contains(ad2));
         assertFalse(seance.getAdvertisements().contains(ad1));
-        assertTrue(ad1.getSeances().contains(seance));
+        assertTrue(ad1.getSeances().contains(seance2));
         assertEquals(1, seance.getAdvertisements().size());
     }
 

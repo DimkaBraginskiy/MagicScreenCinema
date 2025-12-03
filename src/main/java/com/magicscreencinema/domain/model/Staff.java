@@ -24,9 +24,9 @@ public class Staff extends Person {
     private Staff manager;
 
     @OneToMany
-    private Set<Staff> managedStaff=new HashSet<>();
+    private Set<Staff> managedStaff = new HashSet<>();
 
-    private Set<Shift> shifts=new HashSet<>();
+    private Set<Shift> shifts = new HashSet<>();
 
     public Staff(String firstName, String lastName, String phoneNumber, String email, String password,
                  LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
@@ -59,8 +59,8 @@ public class Staff extends Person {
         if (this.manager != null) {
             this.manager.removeManagedStaff(this);
         }
-
-        this.manager = FieldValidator.validateObjectNotNull(manager, "manager");
+        this.manager = FieldValidator.validateObjectRecursion(manager, this);
+        this.manager = FieldValidator.validateObjectNotNull(manager, "Manager");
 
         this.manager.addManagedStaff(this);
     }
@@ -68,12 +68,12 @@ public class Staff extends Person {
     //--association logic
     // staff
     void addManagedStaff(Staff staff) {
-        FieldValidator.validateObjectNotNull(staff, "staff");
+        FieldValidator.validateObjectNotNull(staff, "Staff");
         managedStaff.add(staff);
     }
 
     void removeManagedStaff(Staff staff) {
-        FieldValidator.validateObjectNotNull(staff, "staff");
+        FieldValidator.validateObjectNotNull(staff, "Staff");
         managedStaff.remove(staff);
     }
 
@@ -104,10 +104,6 @@ public class Staff extends Person {
 
     public void setContractType(ContractTypeEnum contractType) {
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
-    }
-
-    public void setManager(Staff manager) {
-        this.manager = FieldValidator.validateObjectRecursion(manager, this);
     }
 
     public LocalDate getHireDate() {

@@ -15,28 +15,32 @@ public class Customer extends Person {
 
     private final Map<ReservationKey, Reservation> reservations = new HashMap<>();
 
-    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, int loyaltyPoints) {
+    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,
+                    int loyaltyPoints) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
         this.loyaltyPoints = FieldValidator.validateNonNegativeNumber(loyaltyPoints, "Loyalty Points");
     }
 
-    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
-    }
     private Customer() {
     }
 
     //--association logic
     // reservations
-    public void addReservation(Reservation reservation){
-        FieldValidator.validateObjectNotNull(reservation, "reservation");
+    public void addReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
         reservations.put(key, reservation);
     }
 
-    public Reservation getReservation(ReservationKey key){
-        FieldValidator.validateObjectNotNull(key, "key");
+    public Reservation getReservation(ReservationKey key) {
+        FieldValidator.validateObjectNotNull(key, "Key");
         return reservations.get(key);
+    }
+
+    public void removeReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
+        reservations.remove(key);
     }
 
     public Map<ReservationKey, Reservation> getReservations() {

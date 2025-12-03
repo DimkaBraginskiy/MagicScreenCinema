@@ -203,7 +203,7 @@ public class StaffTest {
             Staff staff = new Staff("Test first", "Test last", "1234567",
                     "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
                     LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
-            staff.setManager(staff);
+            staff.assignManager(staff);
         });
         assertEquals("An object cannot have a recursive association with itself", exception.getMessage());
     }
@@ -216,7 +216,7 @@ public class StaffTest {
         Staff staff = new Staff("Test first", "Test last", "1234567",
                 "example@gmail.com", "pass", LocalDate.of(2023, 10, 3),
                 LocalDate.of(2023, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
-        staff.setManager(m);
+        staff.assignManager(m);
 
         Staff manager = staff.getManager().get();
         assertEquals("Test first1", manager.getFirstName());
