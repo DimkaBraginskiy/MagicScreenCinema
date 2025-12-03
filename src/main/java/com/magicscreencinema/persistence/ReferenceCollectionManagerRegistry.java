@@ -11,7 +11,7 @@ class ReferenceCollectionManagerRegistry {
     private static final Map<String, ReferenceCollectionManager> managers = new HashMap<>();
 
     static ReferenceCollectionManager getManager(Class<?> a, Class<?> b) {
-        String collectionName =resolveReferenceCollectionName(a, b);
+        String collectionName = resolveReferenceCollectionName(a, b);
         return managers.computeIfAbsent(
                 collectionName,
                 ReferenceCollectionManager::new
