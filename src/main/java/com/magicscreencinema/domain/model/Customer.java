@@ -1,8 +1,7 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -12,7 +11,8 @@ import java.util.UUID;
 @ElementCollection(name = "customers")
 public class Customer extends Person {
     private int loyaltyPoints = 0;
-
+    @OneToMany(fetch = Fetch.EAGER)
+    @Qualifier(converter = ReservationKeyConverter.class, referenceCollectionName = "reservation_keys")
     private final Map<ReservationKey, Reservation> reservations = new HashMap<>();
 
     public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,

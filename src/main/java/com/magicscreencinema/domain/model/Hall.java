@@ -19,9 +19,11 @@ public class Hall {
     private int rowWidth;
 
     //--associations
-    @OneToMany(cascade = {Cascade.SAVE, Cascade.DELETE})
+    @OneToMany(fetch = Fetch.EAGER, cascade = {Cascade.DELETE, Cascade.SAVE})
     private Set<Seat> seats;
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Seance> seances;
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Shift> shifts;
 
     //--constructors
@@ -37,6 +39,7 @@ public class Hall {
         seances = new HashSet<>();
         seats = new HashSet<>();
         shifts = new HashSet<>();
+        id = UUID.randomUUID();
     }
 
     public Hall(int hallNumber, HallTypeEnum hallType, int maxRow, int rowWidth, Set<Seance> seances) {
@@ -103,10 +106,6 @@ public class Hall {
 
     public void setMaxRow(int maxRow) {
         this.maxRow = FieldValidator.validatePositiveNumber(maxRow, "Max Row");
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     //--getters

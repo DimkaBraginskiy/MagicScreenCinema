@@ -2,7 +2,9 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Fetch;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToMany;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,15 +20,15 @@ public class Advertisement {
     private String advertiserName;
 
     //--associations
+    @ManyToMany(fetch = Fetch.EAGER)
     private Set<Seance> seances;
 
     //--constructors
     private Advertisement() {
-        this.seances = new HashSet<>();
     }
 
     public Advertisement(String name, long duration, String advertiserName) {
-        this();
+        this.seances = new HashSet<>();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.duration = FieldValidator.validatePositiveNumber(duration, "Duration");
         this.advertiserName = FieldValidator.validateNullOrEmptyString(advertiserName, "Advertiser Name");

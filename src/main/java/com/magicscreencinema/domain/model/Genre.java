@@ -2,7 +2,9 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Fetch;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToMany;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,15 +17,15 @@ public class Genre {
     private String name;
 
     //--associations
+    @ManyToMany(fetch = Fetch.EAGER)
     private Set<Movie> movies;
 
     //--constructors
     private Genre() {
-        this.movies = new HashSet<>();
     }
 
     public Genre(String name) {
-        this();
+        this.movies = new HashSet<>();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.id = UUID.randomUUID();
     }

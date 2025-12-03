@@ -5,6 +5,7 @@ import com.magicscreencinema.domain.enums.PaymentStatusEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.ManyToOne;
 
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ public class Payment {
     private PaymentMethodEnum paymentMethod;
     private PaymentStatusEnum paymentStatus;
     private String transactionId;
+    @ManyToOne
     private Reservation reservation;
 
     private Payment() {}

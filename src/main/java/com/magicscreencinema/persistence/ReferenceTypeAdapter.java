@@ -386,7 +386,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         if (genericType == null) return Collections.emptySet();
 
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
-        List<Object> children = new ArrayList<>();
+        Collection<Object> children = new HashSet<>();
 
         List<UUID> childrenIds = ReferenceCollectionManagerRegistry.getManager(type, genericType)
                 .getRelatedIds(instanceId, false);

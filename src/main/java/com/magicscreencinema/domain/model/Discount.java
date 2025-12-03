@@ -3,7 +3,9 @@ package com.magicscreencinema.domain.model;
 import com.magicscreencinema.domain.exception.InvalidDiscountException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
+import com.magicscreencinema.persistence.declaration.Fetch;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.OneToMany;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +17,7 @@ public class Discount {
     private UUID id;
     private double discountAmount;
     private String promoCode;
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Reservation> reservations;
 
     public Discount(double discountAmount, String promoCode) {

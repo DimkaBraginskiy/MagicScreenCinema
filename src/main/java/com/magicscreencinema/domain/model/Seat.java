@@ -17,6 +17,7 @@ public class Seat {
     private static final double PRICE = 20;
     @ManyToOne
     private Hall hall;
+    @ManyToOne
     private Reservation reservation;
 
     Seat(int seatNumber, int row, Hall hall) {

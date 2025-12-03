@@ -18,14 +18,15 @@ public class Reservation {
     private ReservationStatusEnum status;
 
     //--associations
-    @ManyToOne()
+    @ManyToOne
     private Discount discount;
     @OneToMany(fetch = Fetch.EAGER)
     private Set<Seat> seats;
-
+    @ManyToOne
     private Seance seance;
+    @OneToMany(fetch = Fetch.EAGER, cascade = {Cascade.SAVE, Cascade.DELETE})
     private Set<Payment> payments;
-
+    @ManyToOne
     private Customer customer;
 
     private Reservation() {

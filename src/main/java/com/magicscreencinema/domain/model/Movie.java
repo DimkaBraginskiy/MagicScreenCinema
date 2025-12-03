@@ -2,8 +2,7 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.AgeRestrictionEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -22,17 +21,18 @@ public class Movie {
     private long movieDuration;
 
     //--associations
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Seance> seances;
+    @ManyToMany(fetch = Fetch.EAGER)
     private Set<Genre> genres;
 
     //--constructors
     private Movie() {
-        seances = new HashSet<>();
-        genres = new HashSet<>();
     }
 
     public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration) {
-        this();
+        seances = new HashSet<>();
+        genres = new HashSet<>();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");

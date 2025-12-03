@@ -2,10 +2,7 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
-import com.magicscreencinema.persistence.declaration.ManyToOne;
-import com.magicscreencinema.persistence.declaration.OneToMany;
+import com.magicscreencinema.persistence.declaration.*;
 
 import javax.annotation.processing.Generated;
 import java.time.LocalDate;
@@ -23,9 +20,9 @@ public class Staff extends Person {
     @ManyToOne
     private Staff manager;
 
-    @OneToMany
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Staff> managedStaff = new HashSet<>();
-
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Shift> shifts = new HashSet<>();
 
     public Staff(String firstName, String lastName, String phoneNumber, String email, String password,

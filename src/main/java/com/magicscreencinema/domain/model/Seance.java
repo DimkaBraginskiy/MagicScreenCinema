@@ -1,9 +1,7 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
-import com.magicscreencinema.persistence.declaration.ManyToOne;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -25,17 +23,19 @@ public class Seance {
     private Movie movie;
     @ManyToOne
     private Hall hall;
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Reservation> reservations;
+    @ManyToMany(fetch = Fetch.EAGER)
     private Set<Advertisement> advertisements;
 
     //--constructors
     private Seance() {
-        this.reservations = new HashSet<>();
-        this.advertisements = new HashSet<>();
     }
 
     public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
-        this();
+        id = UUID.randomUUID();
+        this.reservations = new HashSet<>();
+        this.advertisements = new HashSet<>();
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
         this.isCancelled = isCancelled;
         this.reservations = new HashSet<>();
@@ -169,5 +169,9 @@ public class Seance {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+    }
+
+    public UUID getId() {
+        return id;
     }
 }
