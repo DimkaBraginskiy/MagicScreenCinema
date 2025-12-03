@@ -121,6 +121,10 @@ class SimpleObjectCollection<T> implements ObjectCollection<T> {
         try {
             for (Field field : fields) {
                 boolean isCascade = false;
+                if(PersistenceUtil.isQualified(field)){
+                    ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(objectClass, PersistenceUtil.getGenericTypes(field).get(1));
+                    clearQualifiedReferences(id, manager, field.getAnnotation(Qualifier.class));
+                }
                 if (field.isAnnotationPresent(OneToMany.class)) {
                     isCascade = Arrays.stream(field.getAnnotation(OneToMany.class).cascade()).anyMatch(c -> c == Cascade.DELETE);
                 } else if (field.isAnnotationPresent(ManyToMany.class)) {
@@ -148,6 +152,22 @@ class SimpleObjectCollection<T> implements ObjectCollection<T> {
         for (UUID relatedId : relatedIds) {
             relatedCollection.deleteById(relatedId);
         }
+    }
+
+    private void clearQualifiedReferences(UUID id, ReferenceCollectionManager manager, Qualifier qualifier){
+        QualifiedReferenceCollectionManagerRegistry.getExistingManager(qualifier.referenceCollectionName())
+                .ifPresent(m -> {
+                    try {
+                        for(UUID relatedId : manager.getRelatedIds(id, false)){
+                            m.clearRelations(relatedId);
+                        }
+                        for(UUID relatedId : manager.getRelatedIds(id, true)){
+                            m.clearRelations(relatedId);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     private void clearAllRelations(UUID id) throws IOException {
