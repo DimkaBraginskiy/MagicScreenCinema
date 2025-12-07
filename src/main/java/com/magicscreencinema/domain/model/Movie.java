@@ -2,14 +2,16 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.AgeRestrictionEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @ElementCollection(name = "movies")
 public class Movie {
+    //--basic fields
     @Id
     private UUID id;
     private String name;
@@ -18,7 +20,19 @@ public class Movie {
     private LocalDate premiereDate;
     private long movieDuration;
 
+    //--associations
+    @OneToMany(fetch = Fetch.EAGER)
+    private Set<Seance> seances;
+    @ManyToMany(fetch = Fetch.EAGER)
+    private Set<Genre> genres;
+
+    //--constructors
+    private Movie() {
+    }
+
     public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration) {
+        seances = new HashSet<>();
+        genres = new HashSet<>();
         this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
         this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
         this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
@@ -27,50 +41,109 @@ public class Movie {
         id = UUID.randomUUID();
     }
 
-    private Movie() {
+    public Movie(String name, AgeRestrictionEnum ageRestriction, String description, LocalDate premiereDate, long movieDuration,
+                 Set<Seance> seances, Set<Genre> genres) {
+        this(name, ageRestriction, description, premiereDate, movieDuration);
+
+        FieldValidator.validateObjectNotNull(seances, "Seances");
+        for (Seance seance : seances) {
+            addSeance(seance);
+        }
+
+        FieldValidator.validateObjectNotNull(genres, "Genres");
+        for (Genre genre : genres) {
+            addGenre(genre);
+        }
+    }
+
+    //--association logic
+    //seance
+    void addSeance(Seance seance) {
+        FieldValidator.validateObjectNotNull(seance, "Seance");
+        this.seances.add(seance);
+    }
+
+    void removeSeance(Seance seance) {
+        FieldValidator.validateObjectNotNull(seance, "Seance");
+        this.seances.remove(seance);
+    }
+
+    //genre
+    public void addGenre(Genre genre) {
+        FieldValidator.validateObjectNotNull(genre, "Genre");
+
+        if (this.genres.contains(genre)) return;
+
+        this.genres.add(genre);
+        genre.addMovie(this);
+    }
+
+    public void removeGenre(Genre genre) {
+        FieldValidator.validateObjectNotNull(genre, "Genre");
+
+        if (!this.genres.contains(genre)) return;
+
+        // check because: 1..*
+        // we cannot remove the genre if it is the only one left
+        if (this.genres.size() <= 1) {
+            throw new IllegalStateException("Cannot remove Genre '" + genre.getName() + "'. A Movie must have at least one Genre.");
+        }
+
+        this.genres.remove(genre);
+        genre.removeMovie(this);
+    }
+
+    //--getters
+    public Set<Genre> getGenres() {
+        return new HashSet<>(genres);
+    }
+
+    public Set<Seance> getSeances() {
+        return new HashSet<>(seances);
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
-    }
-
     public AgeRestrictionEnum getAgeRestriction() {
         return ageRestriction;
-    }
-
-    public void setAgeRestriction(AgeRestrictionEnum ageRestriction) {
-        this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
-    }
-
-    public LocalDate getPremiereDate() {
-        return premiereDate;
-    }
-
-    public void setPremiereDate(LocalDate premiereDate) {
-        this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
     }
 
     public long getMovieDuration() {
         return movieDuration;
     }
 
-    public void setMovieDuration(long movieDuration) {
-        this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
+    public LocalDate getPremiereDate() {
+        return premiereDate;
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    //--setters
+    public void setName(String name) {
+        this.name = FieldValidator.validateNullOrEmptyString(name, "Name");
+    }
+
+    public void setAgeRestriction(AgeRestrictionEnum ageRestriction) {
+        this.ageRestriction = FieldValidator.validateObjectNotNull(ageRestriction, "Age Restriction");
+    }
+
+    public void setDescription(String description) {
+        this.description = FieldValidator.validateNullOrEmptyString(description, "Description");
+    }
+
+    public void setPremiereDate(LocalDate premiereDate) {
+        this.premiereDate = FieldValidator.validateDateNotInThePast(premiereDate, "Premiere Date");
+    }
+
+    public void setMovieDuration(long movieDuration) {
+        this.movieDuration = FieldValidator.validatePositiveNumber(movieDuration, "Movie Duration");
     }
 }

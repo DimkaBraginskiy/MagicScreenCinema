@@ -55,8 +55,12 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                         writeSingleReference(currentField, entityToSave, currentFieldValue);
                         writer.nullValue();
                     } else if (PersistenceUtil.isCollectionOfElementCollection(currentField)) {
-                        writeCollectionReference(currentField, entityToSave, currentFieldValue);
-                        writeEmptyArray(writer, currentField.getName());
+                        Class<?> childType = PersistenceUtil.getGenericType(currentField);
+                        writeCollectionReference(childType, currentField, entityToSave, (Collection<?>) currentFieldValue);
+                        writeEmptyArray(writer);
+                    } else if (PersistenceUtil.isQualified(currentField)) {
+                        writeQualifiedReference(currentField, entityToSave, currentFieldValue);
+                        writeEmptyArray(writer);
                     } else {
                         gson.toJson(currentFieldValue, currentField.getType(), writer);
                     }
@@ -65,6 +69,8 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                     throw new RuntimeException("Could not access field " + currentField.getName(), e);
                 } catch (NoSuchFieldException e) {
                     throw new FileNotFoundException("Field not found during cascade save: " + e.getMessage());
+                } catch (InvocationTargetException | NoSuchMethodException | InstantiationException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -81,28 +87,51 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void writeCollectionReference(Field field, Object entity, Object value)
+    private void writeCollectionReference(Class<?> childType, Field field, Object entity, Collection<?> value)
             throws IllegalAccessException, NoSuchFieldException, IOException {
 
         if (field.isAnnotationPresent(OneToMany.class)) {
-            saveOneToManyRelationship(field, entity, value);
+            saveOneToManyRelationship(childType, field, entity, value);
         } else if (field.isAnnotationPresent(ManyToMany.class)) {
-            saveManyToManyRelationship(field, entity, value);
+            saveManyToManyRelationship(childType, field, entity, value);
         }
     }
 
-    private void writeEmptyArray(JsonWriter writer, String name) throws IOException {
-        writer.name(name);
+    private <K> void writeQualifiedReference(Field field, Object entity, Object value)
+            throws IOException, NoSuchFieldException, IllegalAccessException,
+            NoSuchMethodException, InvocationTargetException, InstantiationException {
+
+        Qualifier qualifierAnn = field.getAnnotation(Qualifier.class);
+        Class<? extends QualifierKeyConverter<K>> converterClass = (Class<? extends QualifierKeyConverter<K>>) qualifierAnn.converter();
+        String collectionName = qualifierAnn.referenceCollectionName();
+
+        QualifierKeyConverter<K> converter = converterClass.getDeclaredConstructor().newInstance();
+
+        QualifiedReferenceCollectionManager<K> manager =
+                QualifiedReferenceCollectionManagerRegistry.getManager(converter, collectionName);
+
+        Map<K, ?> values = (Map<K, ?>) value;
+
+        for (Map.Entry<K, ?> entry : values.entrySet()) {
+            K qualifierKey = entry.getKey();
+            UUID relatedId = PersistenceUtil.extractId(entry.getValue());
+            manager.saveRelation(relatedId, qualifierKey);
+        }
+
+        Class<?> childType = PersistenceUtil.getGenericTypes(field).get(1);
+        writeCollectionReference(childType, field, entity, values.values());
+    }
+
+
+    private void writeEmptyArray(JsonWriter writer) throws IOException {
         writer.beginArray();
         writer.endArray();
     }
 
-    private void saveManyToManyRelationship(Field field, Object entity, Object value)
+    private void saveManyToManyRelationship(Class<?> genericType, Field field, Object entity, Collection<?> value)
             throws IOException {
-        Collection<?> relatedEntities = (Collection<?>) value;
-        if (relatedEntities == null) return;
+        if (value == null) return;
 
-        Class<?> genericType = PersistenceUtil.getGenericType(field);
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
 
         boolean cascade = isCascadeSave(field.getAnnotation(ManyToMany.class).cascade());
@@ -110,7 +139,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
 
         PersistenceContext.registerInContext(entity);
 
-        for (Object item : relatedEntities) {
+        for (Object item : value) {
             if (item == null) continue;
 
             UUID relatedId = PersistenceUtil.extractId(item);
@@ -132,12 +161,11 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         }
     }
 
-    private void saveOneToManyRelationship(Field currentField, Object parent, Object currentFieldValue) throws IOException {
+    private void saveOneToManyRelationship(Class<?> childType, Field currentField, Object parent, Object currentFieldValue) throws IOException {
         PersistenceContext.registerInContext(parent);
 
         Cascade[] cascade = currentField.getAnnotation(OneToMany.class).cascade();
 
-        Class<?> childType = PersistenceUtil.getGenericType(currentField);
         ObjectCollection<?> childCollection = ObjectCollectionRegistry.getCollection(childType);
         Iterable<?> children = (Iterable<?>) currentFieldValue;
 
@@ -271,9 +299,16 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
                     readSingleReference(field, instance, instanceId);
                     reader.skipValue();
                 } else if (PersistenceUtil.isCollectionOfElementCollection(field)) {
-                    readCollectionReference(field, instance, instanceId);
+                    Class<?> childType = PersistenceUtil.getGenericType(field);
+                    Collection<?> result = readCollectionReference(childType, field, instance, instanceId);
+                    field.set(instance, result);
                     reader.skipValue();
-                } else {
+                }
+                else if(PersistenceUtil.isQualified(field)) {
+                    Map<?, ?> result = readQualifiedReference(field, instance, instanceId);
+                    field.set(instance, result);
+                    reader.skipValue();
+                }else {
                     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(field.getGenericType()));
                     field.set(instance, adapter.read(reader));
                 }
@@ -281,6 +316,9 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             } catch (IllegalAccessException e) {
                 throw new DeserializationException(
                         "Could not access field " + name + " of class " + currentType.getName(), e);
+            } catch (InvocationTargetException | NoSuchMethodException | InstantiationException e) {
+                throw new DeserializationException(
+                        "Could not read qualified reference for field " + name + " of class " + currentType.getName(), e);
             }
         }
 
@@ -288,13 +326,33 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         return instance;
     }
 
-    private void readCollectionReference(Field field, Object instance, UUID id)
+    private <K>Map<K, ?> readQualifiedReference(Field field, Object instance, UUID id) throws IOException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+        List<Class<?>> genericTypes = PersistenceUtil.getGenericTypes(field);
+        Collection<?> relatedEntities = readCollectionReference(genericTypes.get(1), field, instance, id);
+        Map<K, Object> qualifiedMap = new HashMap<>();
+        Qualifier qualifierAnn = field.getAnnotation(Qualifier.class);
+        Class<? extends QualifierKeyConverter<K>> converterClass = (Class<? extends QualifierKeyConverter<K>>) qualifierAnn.converter();
+        QualifierKeyConverter<K> converter = converterClass.getDeclaredConstructor().newInstance();
+
+        QualifiedReferenceCollectionManager<K> manager = QualifiedReferenceCollectionManagerRegistry.getManager(converter, qualifierAnn.referenceCollectionName());
+
+        for (Object relatedEntity : relatedEntities) {
+            UUID relatedId = PersistenceUtil.extractId(relatedEntity);
+            List<K> qualifiers = manager.getQualifiers(relatedId);
+            for (K qualifier : qualifiers) {
+                qualifiedMap.put(qualifier, relatedEntity);
+            }
+        }
+        return qualifiedMap;
+    }
+
+    private Collection<?> readCollectionReference(Class<?> childType, Field field, Object instance, UUID id)
             throws IOException, IllegalAccessException {
 
         if (field.isAnnotationPresent(OneToMany.class)) {
-            readOneToManyRelationship(field, instance, id);
+            return readOneToManyRelationship(childType, field, id);
         } else if (field.isAnnotationPresent(ManyToMany.class)) {
-            readManyToManyRelationship(field, instance, id);
+            return readManyToManyRelationship(childType, field, instance, id);
         } else {
             throw new RelationshipDeclarationException(
                     "Collection field " + field.getName() +
@@ -319,18 +377,16 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
         readOneToOneRelationship(field, instance, instanceId, true);
     }
 
-    private void readOneToManyRelationship(Field field, Object instance, UUID instanceId)
-            throws IllegalAccessException, IOException {
+    private Collection<?> readOneToManyRelationship(Class<?> genericType, Field field, UUID instanceId)
+            throws IOException {
         if (!field.getAnnotation(OneToMany.class).fetch().equals(Fetch.EAGER)) {
-            field.set(instance, Collections.emptyList());
-            return;
+            return Collections.emptySet();
         }
 
-        Class<?> genericType = PersistenceUtil.getGenericType(field);
-        if (genericType == null) return;
+        if (genericType == null) return Collections.emptySet();
 
         ObjectCollection<?> collection = ObjectCollectionRegistry.getCollection(genericType);
-        List<Object> children = new ArrayList<>();
+        Collection<Object> children = new HashSet<>();
 
         List<UUID> childrenIds = ReferenceCollectionManagerRegistry.getManager(type, genericType)
                 .getRelatedIds(instanceId, false);
@@ -339,17 +395,16 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             collection.findById(childId).ifPresent(children::add);
         }
 
-        field.set(instance, children);
+        return children;
     }
 
-    private void readManyToManyRelationship(Field field, Object instance, UUID id) throws IllegalAccessException, IOException {
-        List<Object> relatedEntities = new ArrayList<>();
+    private Collection<?> readManyToManyRelationship(Class<?> genericType, Field field, Object instance, UUID id) throws IllegalAccessException, IOException {
+        Collection<Object> relatedEntities = new HashSet<>();
         if (!field.getAnnotation(ManyToMany.class).fetch().equals(Fetch.EAGER)) {
             field.set(instance, relatedEntities);
-            return;
+            return relatedEntities;
         }
 
-        Class<?> genericType = PersistenceUtil.getGenericType(field);
         ReferenceCollectionManager manager = ReferenceCollectionManagerRegistry.getManager(type, genericType);
         List<UUID> relatedIds;
 
@@ -370,7 +425,7 @@ class ReferenceTypeAdapter<T> extends TypeAdapter<T> {
             if (relatedEntity != null) relatedEntities.add(relatedEntity);
         }
 
-        field.set(instance, relatedEntities);
+        return relatedEntities;
     }
 
     private void readOneToOneRelationship(Field field, Object instance, UUID instanceId, boolean isOwner)

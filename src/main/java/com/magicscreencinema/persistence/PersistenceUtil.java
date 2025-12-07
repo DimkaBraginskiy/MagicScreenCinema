@@ -2,14 +2,15 @@ package com.magicscreencinema.persistence;
 
 import com.magicscreencinema.persistence.declaration.ElementCollection;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.Qualifier;
 import com.magicscreencinema.persistence.exception.InvalidIdTypeException;
 import com.magicscreencinema.persistence.exception.MissingIdException;
+import com.magicscreencinema.persistence.exception.RelationshipDeclarationException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.UUID;
+import java.util.*;
 
 class PersistenceUtil {
     public static UUID extractId(Object entity) {
@@ -59,6 +60,20 @@ class PersistenceUtil {
         return clazz.isAnnotationPresent(ElementCollection.class);
     }
 
+    public static boolean isQualifier(Field field){
+        return field.isAnnotationPresent(Qualifier.class);
+    }
+
+    public static boolean isQualified(Field field) {
+        if(field.getType().equals(Map.class)){
+            List<Class<?>> genericTypes = getGenericTypes(field);
+            if(isElementCollection(genericTypes.get(1))&& !isQualifier(field))
+                throw new RelationshipDeclarationException("Map field "+ field.getName()+" must have @Qualifier as key type and @ElementCollection as value type in class "+ field.getDeclaringClass().getName());
+            return genericTypes.size() == 2 && isElementCollection(genericTypes.get(1))&& isQualifier(field);
+        }
+        return false;
+    }
+
     public static void isUUIDType(Field field) {
         if (!field.getType().equals(UUID.class)) {
             throw new InvalidIdTypeException("Field annotated with @Id must be of type UUID in class");
@@ -75,6 +90,21 @@ class PersistenceUtil {
             }
         }
         return null;
+    }
+
+    static List<Class<?>> getGenericTypes(Field field) {
+        Type parameterType = field.getGenericType();
+        if (parameterType instanceof ParameterizedType pType) {
+            Type[] actualTypeArguments = pType.getActualTypeArguments();
+            List<Class<?>> types = new ArrayList<>();
+            for (Type typeArg : actualTypeArguments) {
+                if (typeArg instanceof Class<?> typeClass) {
+                    types.add(typeClass);
+                }
+            }
+            return types;
+        }
+        return Collections.emptyList();
     }
 
     static boolean isCollectionOfElementCollection(Field field) {

@@ -1,44 +1,147 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
-import com.magicscreencinema.persistence.declaration.ManyToOne;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @ElementCollection(name = "seance")
 public class Seance {
+    //--basic fields
     @Id
     private UUID id;
     private LocalDateTime startTime;
     private boolean isCancelled;
     private static final int ADVERTISEMENTS_TIME = 20;
 
+    //--associations
     @ManyToOne
-    public Movie movie;
+    private Movie movie;
     @ManyToOne
-    public Hall hall;
+    private Hall hall;
+    @OneToMany(fetch = Fetch.EAGER)
+    private Set<Reservation> reservations;
+    @ManyToMany(fetch = Fetch.EAGER)
+    private Set<Advertisement> advertisements;
 
-    public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
-        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
-        this.isCancelled = isCancelled;
-        this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
-        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
-        id = UUID.randomUUID();
+    //--constructors
+    private Seance() {
     }
 
-    private Seance() {
+    public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall) {
+        id = UUID.randomUUID();
+        this.reservations = new HashSet<>();
+        this.advertisements = new HashSet<>();
+        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
+        this.isCancelled = isCancelled;
+        this.reservations = new HashSet<>();
+        this.advertisements = new HashSet<>();
+
+        //checks for null in methods!
+        assignHall(hall);
+        assignMovie(movie);
+    }
+
+    public Seance(LocalDateTime startTime, boolean isCancelled, Movie movie, Hall hall,
+                  Set<Reservation> reservations, Set<Advertisement> advertisements) {
+        this(startTime, isCancelled, movie, hall);
+
+        FieldValidator.validateObjectNotNull(reservations, "reservations");
+        for (Reservation reservation : reservations) {
+            addReservation(reservation);
+        }
+
+        FieldValidator.validateObjectNotNull(advertisements, "Advertisements");
+        for (Advertisement advertisement : advertisements) {
+            addAdvertisement(advertisement);
+        }
+    }
+
+    //--association logic
+    // movie
+    public void assignMovie(Movie newMovie) {
+        FieldValidator.validateObjectNotNull(newMovie, "Movie");
+
+        // if trying to set the same movie
+        if (this.movie == newMovie) return;
+
+        // remove this seance from the old movie's list
+        if (this.movie != null) {
+            this.movie.removeSeance(this);
+        }
+
+        this.movie = newMovie;
+        this.movie.addSeance(this);
+    }
+
+    // hall
+    public void assignHall(Hall newHall) {
+        FieldValidator.validateObjectNotNull(newHall, "Hall");
+
+        // if already assigned to this hall
+        if (this.hall == newHall) return;
+
+        if (this.hall != null) {
+            this.hall.removeSeance(this);
+        }
+
+        this.hall = newHall;
+        this.hall.addSeance(this);
+    }
+
+    //reservation
+    void addReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        this.reservations.add(reservation);
+    }
+
+    void removeReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        this.reservations.remove(reservation);
+    }
+
+    // advertisement
+    public void addAdvertisement(Advertisement advertisement) {
+        FieldValidator.validateObjectNotNull(advertisement, "Advertisement");
+
+        if (this.advertisements.contains(advertisement)) return;
+
+        this.advertisements.add(advertisement);
+        advertisement.addSeance(this);
+    }
+
+    public void removeAdvertisement(Advertisement advertisement) {
+        FieldValidator.validateObjectNotNull(advertisement, "Advertisement");
+
+        if (!this.advertisements.contains(advertisement)) return;
+
+        if (this.advertisements.size() <= 1) {
+            throw new IllegalStateException("Cannot remove Advertisement '" + advertisement.getName() + "'. Seance must have at least one Advertisement.");
+        }
+
+        this.advertisements.remove(advertisement);
+        advertisement.removeSeance(this);
+    }
+
+    //--getters
+    public Set<Reservation> getReservations() {
+        return new HashSet<>(reservations);
+    }
+
+    public Set<Advertisement> getAdvertisements() {
+        return new HashSet<>(advertisements);
+    }
+
+    public static int getAdvertisementsTime() {
+        return ADVERTISEMENTS_TIME;
     }
 
     public LocalDateTime getStartTime() {
         return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
     }
 
     public LocalDateTime getEndTime() {
@@ -47,32 +150,25 @@ public class Seance {
                 .plusMinutes(ADVERTISEMENTS_TIME);
     }
 
-    public boolean isCancelled() {
-        return isCancelled;
-    }
-
-    public void setCancelled(boolean cancelled) {
-        this.isCancelled = cancelled;
-    }
-
-    public static int getAdvertisementsTime() {
-        return ADVERTISEMENTS_TIME;
+    public Hall getHall() {
+        return hall;
     }
 
     public Movie getMovie() {
         return movie;
     }
 
-    public void setMovie(Movie movie) {
-        this.movie = FieldValidator.validateObjectNotNull(movie, "Movie");
+    public boolean isCancelled() {
+        return isCancelled;
     }
 
-    public Hall getHall() {
-        return hall;
+    //--setters
+    public void setCancelled(boolean cancelled) {
+        this.isCancelled = cancelled;
     }
 
-    public void setHall(Hall hall) {
-        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = FieldValidator.validateDateTimeNotInThePast(startTime, "Start Time");
     }
 
     public UUID getId() {

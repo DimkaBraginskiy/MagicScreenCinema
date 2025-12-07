@@ -17,8 +17,10 @@ public class Seat {
     private static final double PRICE = 20;
     @ManyToOne
     private Hall hall;
+    @ManyToOne
+    private Reservation reservation;
 
-    public Seat(int seatNumber, int row, Hall hall) {
+    Seat(int seatNumber, int row, Hall hall) {
         this.seatNumber = FieldValidator.validatePositiveNumber(seatNumber, "Seat Number");
         this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
 
@@ -66,8 +68,12 @@ public class Seat {
         return hall;
     }
 
-    public void setHall(Hall hall) {
-        this.hall = FieldValidator.validateObjectNotNull(hall, "Hall");
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    void setReservation(Reservation reservation) {
+        this.reservation = reservation;
     }
 
     public UUID getId() {

@@ -1,25 +1,50 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.validation.FieldValidator;
-import com.magicscreencinema.persistence.declaration.ElementCollection;
-import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @ElementCollection(name = "customers")
 public class Customer extends Person {
     private int loyaltyPoints = 0;
+    @OneToMany(fetch = Fetch.EAGER)
+    @Qualifier(converter = ReservationKeyConverter.class, referenceCollectionName = "reservation_keys")
+    private final Map<ReservationKey, Reservation> reservations = new HashMap<>();
 
-    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, int loyaltyPoints) {
+    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,
+                    int loyaltyPoints) {
         super(firstName, lastName, phoneNumber, email, password, birthDate);
         this.loyaltyPoints = FieldValidator.validateNonNegativeNumber(loyaltyPoints, "Loyalty Points");
     }
 
-    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
-    }
     private Customer() {
+    }
+
+    //--association logic
+    // reservations
+    void addReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
+        reservations.put(key, reservation);
+    }
+
+    public Reservation getReservation(ReservationKey key) {
+        FieldValidator.validateObjectNotNull(key, "Key");
+        return reservations.get(key);
+    }
+
+    void removeReservation(Reservation reservation) {
+        FieldValidator.validateObjectNotNull(reservation, "Reservation");
+        ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
+        reservations.remove(key);
+    }
+
+    public Map<ReservationKey, Reservation> getReservations() {
+        return new HashMap<>(reservations);
     }
 
     public void setLoyaltyPoints(int loyaltyPoints) {
