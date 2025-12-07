@@ -61,6 +61,11 @@ public class Reservation {
         customer.addReservation(this);
     }
 
+    public void removeCustomer(){
+        this.customer.removeReservation(this);
+        this.customer = null;
+    }
+
     public Customer getCustomer() {
         return this.customer;
     }

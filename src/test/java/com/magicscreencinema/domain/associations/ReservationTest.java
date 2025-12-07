@@ -70,7 +70,7 @@ public class ReservationTest {
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
-        customer.addReservation(reservation);
+        reservation.assignCustomer(customer);
         reservation.setReservationTime(LocalDateTime.of(2030, 9, 1, 14, 0));
 
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());

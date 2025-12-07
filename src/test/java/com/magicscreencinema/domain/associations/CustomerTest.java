@@ -27,7 +27,7 @@ public class CustomerTest {
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
-        customer.addReservation(reservation);
+        reservation.assignCustomer(customer);
 
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
 
@@ -39,16 +39,6 @@ public class CustomerTest {
         assertEquals(movie, reservation.getSeance().getMovie());
         assertEquals(hall, reservation.getSeance().getHall());
         assertEquals(1, customer.getReservations().size());
-    }
-
-    @Test
-    public void createReservationAssociation_WithNullReservationParameter_ShouldThrowNullAttributeException() {
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
-                "pass", LocalDate.of(1999, 10, 7), 0);
-        NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            customer.addReservation(null);
-        });
-        assertEquals("Reservation can not be null", exception.getMessage());
     }
 
     @Test
@@ -64,7 +54,7 @@ public class CustomerTest {
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
-        customer.addReservation(reservation);
+        reservation.assignCustomer(customer);
         reservation.setReservationTime(LocalDateTime.of(2030, 9, 1, 14, 0));
 
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
@@ -92,22 +82,12 @@ public class CustomerTest {
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
-        customer.removeReservation(reservation);
+        reservation.removeCustomer();
 
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
 
         assertFalse(customer.getReservations().containsKey(key));
         assertEquals(customer, reservation.getCustomer());
         assertEquals(0, customer.getReservations().size());
-    }
-
-    @Test
-    public void deleteReservationAssociation_WithNullReservationParameter_ShouldThrowNullAttributeException() {
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
-                "pass", LocalDate.of(1999, 10, 7), 0);
-        NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            customer.removeReservation(null);
-        });
-        assertEquals("Reservation can not be null", exception.getMessage());
     }
 }

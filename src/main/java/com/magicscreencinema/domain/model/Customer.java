@@ -26,7 +26,7 @@ public class Customer extends Person {
 
     //--association logic
     // reservations
-    public void addReservation(Reservation reservation) {
+    void addReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
         reservations.put(key, reservation);
@@ -37,7 +37,7 @@ public class Customer extends Person {
         return reservations.get(key);
     }
 
-    public void removeReservation(Reservation reservation) {
+    void removeReservation(Reservation reservation) {
         FieldValidator.validateObjectNotNull(reservation, "Reservation");
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
         reservations.remove(key);
