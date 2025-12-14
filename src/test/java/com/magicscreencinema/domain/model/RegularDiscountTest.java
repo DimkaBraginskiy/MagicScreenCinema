@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class RegularDiscountTest {
     @Test
     public void constructor_WithValidParameters_ShouldCreateRegularDiscount() {
-        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
 
         assertNotNull(regularDiscount);
         assertEquals(2, regularDiscount.getDayOfWeek().size());
@@ -24,7 +24,7 @@ public class RegularDiscountTest {
     @Test
     public void constructor_WithNullDayOfWeekList_ShouldThrowNullArgumentException() {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            new RegularDiscount(null);
+            new RegularDiscount(null, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("Day Of Week List can not be null", exception.getMessage());
     }
@@ -35,7 +35,7 @@ public class RegularDiscountTest {
         days.add(DayOfWeek.MONDAY);
         days.add(null);
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            new RegularDiscount(days);
+            new RegularDiscount(days, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("Day Of Week List can not be null", exception.getMessage());
     }
@@ -43,7 +43,7 @@ public class RegularDiscountTest {
     @Test
     public void constructor_WithDayOfWeekListContainingDuplicatedValues_DuplicateDayException() {
         DuplicateDayException exception = assertThrows(DuplicateDayException.class, () -> {
-            new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.MONDAY));
+            new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.MONDAY), 0.1, "SDFDFSD", "descr");
         });
         assertEquals("Duplicate day 'MONDAY' in Day Of Week List is not allowed", exception.getMessage());
     }
@@ -51,7 +51,7 @@ public class RegularDiscountTest {
     @Test
     public void setDayOfWeek_WithNullDayOfWeekList_ShouldThrowNullArgumentException() {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
             regularDiscount.setDayOfWeek(null);
         });
         assertEquals("Day Of Week List can not be null", exception.getMessage());
@@ -63,7 +63,7 @@ public class RegularDiscountTest {
         days.add(DayOfWeek.MONDAY);
         days.add(null);
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
             regularDiscount.setDayOfWeek(days);
         });
         assertEquals("Day Of Week List can not be null", exception.getMessage());
@@ -72,7 +72,7 @@ public class RegularDiscountTest {
     @Test
     public void setDayOfWeek_WithDayOfWeekListContainingDuplicatedValues_ShouldThrowDuplicateDayException() {
         DuplicateDayException exception = assertThrows(DuplicateDayException.class, () -> {
-            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+            RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
             regularDiscount.setDayOfWeek(List.of(DayOfWeek.MONDAY, DayOfWeek.MONDAY));
         });
         assertEquals("Duplicate day 'MONDAY' in Day Of Week List is not allowed", exception.getMessage());
@@ -80,7 +80,7 @@ public class RegularDiscountTest {
 
     @Test
     public void setDayOfWeek_WithValidDayOfWeekList_ShouldChangeDayOfWeekList() {
-        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
         regularDiscount.setDayOfWeek(List.of(DayOfWeek.FRIDAY, DayOfWeek.THURSDAY));
 
         assertNotNull(regularDiscount);

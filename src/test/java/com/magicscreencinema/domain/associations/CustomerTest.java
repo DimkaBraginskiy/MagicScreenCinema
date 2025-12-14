@@ -87,7 +87,7 @@ public class CustomerTest {
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
 
         assertFalse(customer.getReservations().containsKey(key));
-        assertEquals(customer, reservation.getCustomer());
+        assertEquals(null, reservation.getCustomer());
         assertEquals(0, customer.getReservations().size());
     }
 }
