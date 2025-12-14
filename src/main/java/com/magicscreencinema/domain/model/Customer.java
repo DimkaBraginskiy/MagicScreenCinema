@@ -12,13 +12,17 @@ import java.util.UUID;
 
 @ElementCollection(name = "customers")
 public class Customer{
+    @Id
+    private UUID id;
     private int loyaltyPoints = 0;
     @OneToMany(fetch = Fetch.EAGER)
     @Qualifier(converter = ReservationKeyConverter.class, referenceCollectionName = "reservation_keys")
     private final Map<ReservationKey, Reservation> reservations = new HashMap<>();
+    @OneToOne
     private Person person;
 
     public Customer(Person person, int loyaltyPoints) {
+        this.id = UUID.randomUUID();
         this.loyaltyPoints = FieldValidator.validateNonNegativeNumber(loyaltyPoints, "Loyalty Points");
         this.person = FieldValidator.validateObjectNotNull(person, "Person");
 
@@ -63,5 +67,9 @@ public class Customer{
 
     public Person getPerson() {
         return person;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

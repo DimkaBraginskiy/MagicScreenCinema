@@ -2,8 +2,10 @@ package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.validation.FieldValidator;
+import com.magicscreencinema.persistence.declaration.Cascade;
 import com.magicscreencinema.persistence.declaration.ElementCollection;
 import com.magicscreencinema.persistence.declaration.Id;
+import com.magicscreencinema.persistence.declaration.OneToOne;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -19,7 +21,9 @@ public class Person {
     private String email;
     private String password;
     private LocalDate birthDate;
+    @OneToOne(cascade = {Cascade.DELETE, Cascade.SAVE})
     private Customer customer;
+    @OneToOne(cascade = {Cascade.DELETE, Cascade.SAVE})
     private Staff staff;
 
     private Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate) {

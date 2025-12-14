@@ -14,6 +14,8 @@ import java.util.UUID;
 
 @ElementCollection(name = "staffs")
 public class Staff{
+    @Id
+    private UUID id;
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
@@ -25,6 +27,7 @@ public class Staff{
     private final Set<Staff> managedStaff = new HashSet<>();
     @OneToMany(fetch = Fetch.EAGER)
     private final Set<Shift> shifts = new HashSet<>();
+    @OneToOne
     private Person person;
 
     public Staff(Person person, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
@@ -33,6 +36,7 @@ public class Staff{
     }
 
     public Staff(Person person, LocalDate hireDate, double salary, ContractTypeEnum contractType) {
+        this.id = UUID.randomUUID();
         this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
@@ -124,5 +128,9 @@ public class Staff{
 
     public Person getPerson() {
         return person;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }
