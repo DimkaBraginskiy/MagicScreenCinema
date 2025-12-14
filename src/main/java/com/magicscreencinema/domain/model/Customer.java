@@ -1,5 +1,7 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.enums.ContractTypeEnum;
+import com.magicscreencinema.domain.exception.InheritanceViolationException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
@@ -9,16 +11,20 @@ import java.util.Map;
 import java.util.UUID;
 
 @ElementCollection(name = "customers")
-public class Customer extends Person {
+public class Customer{
     private int loyaltyPoints = 0;
     @OneToMany(fetch = Fetch.EAGER)
     @Qualifier(converter = ReservationKeyConverter.class, referenceCollectionName = "reservation_keys")
     private final Map<ReservationKey, Reservation> reservations = new HashMap<>();
+    private Person person;
 
-    public Customer(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,
-                    int loyaltyPoints) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
+    public Customer(Person person, int loyaltyPoints) {
         this.loyaltyPoints = FieldValidator.validateNonNegativeNumber(loyaltyPoints, "Loyalty Points");
+        this.person = FieldValidator.validateObjectNotNull(person, "Person");
+
+        if(person.getCustomer().isPresent()) {
+            throw new InheritanceViolationException("Person is already associated with another Customer.");
+        }
     }
 
     private Customer() {
@@ -53,5 +59,9 @@ public class Customer extends Person {
 
     public int getLoyaltyPoints() {
         return loyaltyPoints;
+    }
+
+    public Person getPerson() {
+        return person;
     }
 }

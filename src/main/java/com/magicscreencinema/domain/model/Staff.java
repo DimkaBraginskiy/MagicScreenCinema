@@ -1,6 +1,7 @@
 package com.magicscreencinema.domain.model;
 
 import com.magicscreencinema.domain.enums.ContractTypeEnum;
+import com.magicscreencinema.domain.exception.InheritanceViolationException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @ElementCollection(name = "staffs")
-public class Staff extends Person {
+public class Staff{
     private LocalDate hireDate;
     private double salary;
     private ContractTypeEnum contractType;
@@ -21,30 +22,24 @@ public class Staff extends Person {
     private Staff manager;
 
     @OneToMany(fetch = Fetch.EAGER)
-    private Set<Staff> managedStaff = new HashSet<>();
+    private final Set<Staff> managedStaff = new HashSet<>();
     @OneToMany(fetch = Fetch.EAGER)
-    private Set<Shift> shifts = new HashSet<>();
+    private final Set<Shift> shifts = new HashSet<>();
+    private Person person;
 
-    public Staff(String firstName, String lastName, String phoneNumber, String email, String password,
-                 LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
-        this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
-        this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
-        this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
-
-
-        this.shifts = new HashSet<>();
-        this.managedStaff = new HashSet<>();
-
+    public Staff(Person person, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager) {
+        this(person, hireDate, salary, contractType);
         assignManager(manager);
     }
 
-    public Staff(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate,
-                 LocalDate hireDate, double salary, ContractTypeEnum contractType) {
-        super(firstName, lastName, phoneNumber, email, password, birthDate);
+    public Staff(Person person, LocalDate hireDate, double salary, ContractTypeEnum contractType) {
         this.hireDate = FieldValidator.validateDateNotInTheFuture(hireDate, "Hire Date");
         this.salary = FieldValidator.validatePositiveNumber(salary, "Salary");
         this.contractType = FieldValidator.validateObjectNotNull(contractType, "Contract Type");
+        this.person = FieldValidator.validateObjectNotNull(person, "Person");
+        if(person.getStaff().isPresent()) {
+            throw new InheritanceViolationException("Person is already associated with another Staff.");
+        }
     }
 
     private Staff() {
@@ -125,5 +120,9 @@ public class Staff extends Person {
 
     public Set<Staff> getManagedStaff() {
         return new HashSet<>(managedStaff);
+    }
+
+    public Person getPerson() {
+        return person;
     }
 }

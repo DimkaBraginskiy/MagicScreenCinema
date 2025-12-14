@@ -25,8 +25,9 @@ public class ReservationTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
@@ -65,8 +66,9 @@ public class ReservationTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
@@ -93,8 +95,9 @@ public class ReservationTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
         reservation.assignCustomer(customer);
@@ -119,10 +122,13 @@ public class ReservationTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
-        Customer customer2 = new Customer("Fname2", "Lname2", "2345678", "example@gmail.com",
+        Person person2 = new Person("Fname2", "Lname2", "2345678", "example@gmail.com",
                 "pass2", LocalDate.of(1999, 10, 7), 0);
+
+        Customer customer = person.getCustomer().get();
+        Customer customer2 = person2.getCustomer().get();
 
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
@@ -150,11 +156,11 @@ public class ReservationTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
 
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
-                ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
+                ReservationStatusEnum.PENDING, seance, new HashSet<>(), person.getCustomer().get());
 
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             reservation.assignCustomer(null);
