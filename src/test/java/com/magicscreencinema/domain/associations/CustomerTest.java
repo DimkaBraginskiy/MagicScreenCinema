@@ -22,8 +22,9 @@ public class CustomerTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
@@ -49,8 +50,9 @@ public class CustomerTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
@@ -77,8 +79,9 @@ public class CustomerTest {
         Seance seance = new Seance(LocalDateTime.of(2026, 10, 2, 12, 0),
                 false, movie, hall);
 
-        Customer customer = new Customer("Fname", "Lname", "2345678", "example@gmail.com",
+        Person person = new Person("Fname", "Lname", "2345678", "example@gmail.com",
                 "pass", LocalDate.of(1999, 10, 7), 0);
+        Customer customer = person.getCustomer().get();
         Reservation reservation = new Reservation(LocalDateTime.of(2030, 9, 1, 12, 0),
                 ReservationStatusEnum.PENDING, seance, new HashSet<>(), customer);
 
@@ -87,7 +90,7 @@ public class CustomerTest {
         ReservationKey key = new ReservationKey(reservation.getReservationNumber(), reservation.getReservationTime());
 
         assertFalse(customer.getReservations().containsKey(key));
-        assertEquals(customer, reservation.getCustomer());
+        assertNull(reservation.getCustomer());
         assertEquals(0, customer.getReservations().size());
     }
 }
