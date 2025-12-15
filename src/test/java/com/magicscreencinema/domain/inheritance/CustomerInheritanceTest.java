@@ -1,6 +1,7 @@
 package com.magicscreencinema.domain.inheritance;
 
 import com.magicscreencinema.domain.enums.ContractTypeEnum;
+import com.magicscreencinema.domain.exception.InheritanceViolationException;
 import com.magicscreencinema.domain.exception.NegativeValueException;
 import com.magicscreencinema.domain.model.Customer;
 import com.magicscreencinema.domain.model.Person;
@@ -34,16 +35,21 @@ public class CustomerInheritanceTest {
     }
 
     @Test
-    public void constructor_WithNegativeLoyaltyPointsGiven_ShouldThrowException(){
-        assertThrows(NegativeValueException.class, () -> {
-            new Person(
-                    "Saul",
-                    "Goodman",
-                    "123-123-123",
-                    "saul@gmail.com",
-                    "nicepasword",
-                    LocalDate.of(1990,12,1),
-                    -10
+    public void constructor_WhenPersonAlreadyHasCustomer_ShouldThrowException(){
+        Person person = new Person(
+                "Test first",
+                "Test last",
+                "756-745-33",
+                "example@gmail.com",
+                "pass",
+                LocalDate.of(1990, 10, 3),
+                150
+        );
+
+        assertThrows(InheritanceViolationException.class, () -> {
+            new Customer(
+                    person,
+                    150
             );
         });
     }
