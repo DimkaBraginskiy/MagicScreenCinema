@@ -51,13 +51,15 @@ public class Person {
         this.staff = new Staff(this, hireDate, salary, contractType, manager);
     }
 
-    public Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, int loyaltyPoints) {
+    public Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, int loyaltyPoints)
+    {
         this(firstName, lastName, phoneNumber, email, password, birthDate);
         this.staff = new Staff(this, hireDate, salary, contractType);
         this.customer = new Customer(this, loyaltyPoints);
     }
 
-    public Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager, int loyaltyPoints) {
+    public Person(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate birthDate, LocalDate hireDate, double salary, ContractTypeEnum contractType, Staff manager, int loyaltyPoints)
+    {
         this(firstName, lastName, phoneNumber, email, password, birthDate);
         this.staff = new Staff(this, hireDate, salary, contractType, manager);
         this.customer = new Customer(this, loyaltyPoints);

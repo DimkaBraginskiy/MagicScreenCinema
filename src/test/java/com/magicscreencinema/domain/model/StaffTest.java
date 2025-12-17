@@ -65,6 +65,38 @@ public class StaffTest {
     }
 
     @Test
+    public void constructor_WithValidParametersAndValidManagerField_ShouldCreateStaffWhoIsCustomer() {
+        Person m = new Person("Test first1", "Test last1", "1234567",
+                "example1@gmail.com", "pass1", LocalDate.of(2023, 10, 3),
+                LocalDate.of(2025, 3, 10), 20_000, ContractTypeEnum.FULL_TIME);
+
+        Person person = new Person("Test first", "Test last", null,
+                "example@gmail.com", "pass",
+                LocalDate.of(1990, 10, 3),
+                LocalDate.of(1990, 10, 3), 20, ContractTypeEnum.FULL_TIME ,
+                m.getStaff().get(),0);
+
+        Customer customer = person.getCustomer().get();
+        Staff staff = person.getStaff().get();
+        Staff manager = person.getStaff().get().getManager().get();
+
+        assertEquals("Test first", person.getFirstName());
+        assertEquals("Test last", person.getLastName());
+        assertTrue(person.getPhoneNumber().isEmpty());
+        assertEquals("example@gmail.com", person.getEmail());
+        assertEquals("pass", person.getPassword());
+        assertEquals(LocalDate.of(1990, 10, 3), person.getBirthDate());
+        assertEquals(0, customer.getLoyaltyPoints());
+
+        assertEquals(m.getStaff().get(), manager);
+
+        assertEquals(person, staff.getPerson());
+        assertEquals(LocalDate.of(1990, 10, 3), staff.getHireDate());
+        assertEquals(20, staff.getSalary(), 0.001);
+        assertEquals(ContractTypeEnum.FULL_TIME, staff.getContractType());
+    }
+
+    @Test
     public void constructor_WithFutureHireDateField_ShouldThrowDateInFutureException() {
         DateInFutureException exception = assertThrows(DateInFutureException.class, () -> {
             new Person("Test first", "Test last", "1234567",

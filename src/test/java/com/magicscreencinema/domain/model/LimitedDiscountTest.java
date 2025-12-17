@@ -1,5 +1,6 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.enums.AgeGroupEnum;
 import com.magicscreencinema.domain.exception.*;
 import org.junit.Test;
 
@@ -9,13 +10,32 @@ import static org.junit.Assert.*;
 
 public class LimitedDiscountTest {
     @Test
-    public void constructor_WithValidParameters_ShouldCreateLimitedDiscount() {
+    public void constructor_WithValidParameters_ShouldCreateLimitedSpecialConditionDiscount() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
         LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
 
         assertNotNull(discount);
         assertEquals(start, discount.getStartTime());
+        assertEquals(end, discount.getEndTime());
+        assertTrue( discount.getAgeGroupDiscount().isEmpty());
+        assertEquals("descr", discount.getSpecialConditionDiscount().get().getConditionDescription());
+        assertEquals(end, discount.getEndTime());
+    }
+
+    @Test
+    public void constructor_WithValidParameters_ShouldCreateLimitedAgeGroupDiscount() {
+        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
+        LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "SDFDFSD",
+                "descr", AgeGroupEnum.KID);
+
+        assertNotNull(discount);
+        assertEquals(start, discount.getStartTime());
+        assertEquals(end, discount.getEndTime());
+        assertTrue( discount.getSpecialConditionDiscount().isEmpty());
+        assertEquals("descr", discount.getAgeGroupDiscount().get().getDescription());
+        assertEquals(AgeGroupEnum.KID, discount.getAgeGroupDiscount().get().getGroup());
         assertEquals(end, discount.getEndTime());
     }
 

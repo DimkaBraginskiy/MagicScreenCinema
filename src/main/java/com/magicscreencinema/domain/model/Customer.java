@@ -1,11 +1,9 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.exception.InheritanceViolationException;
 import com.magicscreencinema.domain.validation.FieldValidator;
 import com.magicscreencinema.persistence.declaration.*;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

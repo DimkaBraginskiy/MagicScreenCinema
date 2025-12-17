@@ -14,13 +14,30 @@ import static org.junit.Assert.*;
 
 public class RegularDiscountTest {
     @Test
-    public void constructor_WithValidParameters_ShouldCreateRegularDiscount() {
-        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1, "SDFDFSD", "descr");
+    public void constructor_WithValidParameters_ShouldCreateRegularSpecialConditionDiscount() {
+        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1,
+                "SDFDFSD", "descr");
 
         assertNotNull(regularDiscount);
         assertEquals(2, regularDiscount.getDayOfWeek().size());
         assertEquals(DayOfWeek.MONDAY, regularDiscount.getDayOfWeek().get(0));
         assertEquals(DayOfWeek.WEDNESDAY, regularDiscount.getDayOfWeek().get(1));
+        assertEquals("descr", regularDiscount.getSpecialConditionDiscount().get().getConditionDescription());
+        assertTrue(regularDiscount.getAgeGroupDiscount().isEmpty());
+    }
+
+    @Test
+    public void constructor_WithValidParameters_ShouldCreateRegularAgeGroupDiscount() {
+        RegularDiscount regularDiscount = new RegularDiscount(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), 0.1,
+                "SDFDFSD", "descr", AgeGroupEnum.KID);
+
+        assertNotNull(regularDiscount);
+        assertEquals(2, regularDiscount.getDayOfWeek().size());
+        assertEquals(DayOfWeek.MONDAY, regularDiscount.getDayOfWeek().get(0));
+        assertEquals(DayOfWeek.WEDNESDAY, regularDiscount.getDayOfWeek().get(1));
+        assertEquals("descr", regularDiscount.getAgeGroupDiscount().get().getDescription());
+        assertEquals(AgeGroupEnum.KID, regularDiscount.getAgeGroupDiscount().get().getGroup());
+        assertTrue(regularDiscount.getSpecialConditionDiscount().isEmpty());
     }
 
     @Test
