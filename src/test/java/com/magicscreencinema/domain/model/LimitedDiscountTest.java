@@ -1,5 +1,6 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.enums.AgeGroupEnum;
 import com.magicscreencinema.domain.exception.*;
 import org.junit.Test;
 
@@ -9,13 +10,32 @@ import static org.junit.Assert.*;
 
 public class LimitedDiscountTest {
     @Test
-    public void constructor_WithValidParameters_ShouldCreateLimitedDiscount() {
+    public void constructor_WithValidParameters_ShouldCreateLimitedSpecialConditionDiscount() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-        LimitedDiscount discount = new LimitedDiscount(start, end);
+        LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
 
         assertNotNull(discount);
         assertEquals(start, discount.getStartTime());
+        assertEquals(end, discount.getEndTime());
+        assertTrue( discount.getAgeGroupDiscount().isEmpty());
+        assertEquals("descr", discount.getSpecialConditionDiscount().get().getConditionDescription());
+        assertEquals(end, discount.getEndTime());
+    }
+
+    @Test
+    public void constructor_WithValidParameters_ShouldCreateLimitedAgeGroupDiscount() {
+        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
+        LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "SDFDFSD",
+                "descr", AgeGroupEnum.KID);
+
+        assertNotNull(discount);
+        assertEquals(start, discount.getStartTime());
+        assertEquals(end, discount.getEndTime());
+        assertTrue( discount.getSpecialConditionDiscount().isEmpty());
+        assertEquals("descr", discount.getAgeGroupDiscount().get().getDescription());
+        assertEquals(AgeGroupEnum.KID, discount.getAgeGroupDiscount().get().getGroup());
         assertEquals(end, discount.getEndTime());
     }
 
@@ -24,7 +44,7 @@ public class LimitedDiscountTest {
         DateInPastException exception = assertThrows(DateInPastException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2025, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            new LimitedDiscount(start, end);
+            new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("Start Time can not be in the past", exception.getMessage());
     }
@@ -34,7 +54,7 @@ public class LimitedDiscountTest {
         DateInPastException exception = assertThrows(DateInPastException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2025, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2025, 3, 10, 12, 0);
-            new LimitedDiscount(start, end);
+            new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("End Time can not be in the past", exception.getMessage());
     }
@@ -43,7 +63,7 @@ public class LimitedDiscountTest {
     public void constructor_WithStartTimeNullField_ShouldThrowNullAttributeException() {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            new LimitedDiscount(null, end);
+            new LimitedDiscount(null, end, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("Start Time can not be null", exception.getMessage());
     }
@@ -52,7 +72,7 @@ public class LimitedDiscountTest {
     public void constructor_WithEndTimeNullField_ShouldThrowNullAttributeException() {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 3, 10, 12, 0);
-            new LimitedDiscount(start, null);
+            new LimitedDiscount(start, null, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("End Time can not be null", exception.getMessage());
     }
@@ -62,7 +82,7 @@ public class LimitedDiscountTest {
         InvalidDateTimeRangeException exception = assertThrows(InvalidDateTimeRangeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 3, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 1, 10, 12, 0);
-            new LimitedDiscount(start, end);
+            new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
         });
         assertEquals("StartTime can not be bigger than EndTime", exception.getMessage());
     }
@@ -73,7 +93,7 @@ public class LimitedDiscountTest {
         DateInPastException exception = assertThrows(DateInPastException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setStartTime(LocalDateTime.of(2025, 1, 10, 12, 0));
         });
         assertEquals("Start Time can not be in the past", exception.getMessage());
@@ -83,7 +103,7 @@ public class LimitedDiscountTest {
     public void setStartTime_WithValidStartTimeParameter_ShouldChangeStartTime() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-        LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+        LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
         limitedDiscount.setStartTime(LocalDateTime.of(2026, 2, 10, 12, 0));
 
         assertEquals(start.plusMonths(1), limitedDiscount.getStartTime());
@@ -94,7 +114,7 @@ public class LimitedDiscountTest {
         DateInPastException exception = assertThrows(DateInPastException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setEndTime(LocalDateTime.of(2025, 2, 10, 12, 0));
         });
         assertEquals("End Time can not be in the past", exception.getMessage());
@@ -105,7 +125,7 @@ public class LimitedDiscountTest {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setStartTime(null);
         });
         assertEquals("Start Time can not be null", exception.getMessage());
@@ -116,7 +136,7 @@ public class LimitedDiscountTest {
         NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setEndTime(null);
         });
         assertEquals("End Time can not be null", exception.getMessage());
@@ -127,7 +147,7 @@ public class LimitedDiscountTest {
         InvalidDateTimeRangeException exception = assertThrows(InvalidDateTimeRangeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setStartTime(LocalDateTime.of(2026, 4, 10, 12, 0));
         });
         assertEquals("StartTime can not be bigger than EndTime", exception.getMessage());
@@ -138,7 +158,7 @@ public class LimitedDiscountTest {
         InvalidDateTimeRangeException exception = assertThrows(InvalidDateTimeRangeException.class, () -> {
             LocalDateTime start = LocalDateTime.of(2026, 2, 10, 12, 0);
             LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end);
+            LimitedDiscount limitedDiscount = new LimitedDiscount(start, end, 0.1, "SDFDFSD", "descr");
             limitedDiscount.setEndTime(LocalDateTime.of(2026, 1, 10, 12, 0));
         });
         assertEquals("StartTime can not be bigger than EndTime", exception.getMessage());
