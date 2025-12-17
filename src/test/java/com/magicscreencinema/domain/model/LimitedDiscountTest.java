@@ -1,6 +1,5 @@
 package com.magicscreencinema.domain.model;
 
-import com.magicscreencinema.domain.enums.AgeGroupEnum;
 import com.magicscreencinema.domain.exception.*;
 import org.junit.Test;
 
@@ -9,9 +8,6 @@ import java.time.LocalDateTime;
 import static org.junit.Assert.*;
 
 public class LimitedDiscountTest {
-    private final LocalDateTime validStart = LocalDateTime.now().plusDays(1);
-    private final LocalDateTime validEnd = LocalDateTime.now().plusDays(5);
-
     @Test
     public void constructor_WithValidParameters_ShouldCreateLimitedDiscount() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);

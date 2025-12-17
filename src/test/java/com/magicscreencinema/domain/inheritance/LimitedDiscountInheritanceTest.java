@@ -1,6 +1,8 @@
 package com.magicscreencinema.domain.inheritance;
 
 import com.magicscreencinema.domain.enums.AgeGroupEnum;
+import com.magicscreencinema.domain.exception.EmptySeatListException;
+import com.magicscreencinema.domain.exception.EmptyStringException;
 import com.magicscreencinema.domain.exception.InvalidDiscountException;
 import com.magicscreencinema.domain.exception.NullAttributeException;
 import com.magicscreencinema.domain.model.LimitedDiscount;
@@ -34,15 +36,15 @@ public class LimitedDiscountInheritanceTest {
         assertEquals("SENIOR_SUMMER", discount.getPromoCode());
 
         // verify Composition (Inherited from Discount)
-        assertTrue("AgeGroupDiscount should be present", discount.getAgeGroupDiscount().isPresent());
+        assertTrue(discount.getAgeGroupDiscount().isPresent());
         assertEquals(AgeGroupEnum.SENIOR, discount.getAgeGroupDiscount().get().getGroup());
 
         // verify Disjoint Constraint (should not have special condition)
-        assertFalse("SpecialConditionDiscount should NOT be present", discount.getSpecialConditionDiscount().isPresent());
+        assertFalse(discount.getSpecialConditionDiscount().isPresent());
     }
 
     @Test
-    public void constructor_WithSpecialConditionParameters_ShouldCheckInheritanceAndComposition() {
+    public void constructor_WithSpecialConditionParameters_ShouldCreateLimitedDiscountWithSpecialCondition() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
         String expectedPromo = "VIP_SUMMER";
@@ -62,74 +64,88 @@ public class LimitedDiscountInheritanceTest {
         assertEquals(expectedPromo, discount.getPromoCode());
 
         // verify Parent Composition (SpecialConditionDiscount) is created
-        assertTrue("SpecialCondition should be present", discount.getSpecialConditionDiscount().isPresent());
+        assertTrue(discount.getSpecialConditionDiscount().isPresent());
         assertEquals(expectedCondition, discount.getSpecialConditionDiscount().get().getConditionDescription());
 
         // verify Disjoint Constraint (Should NOT have AgeGroup)
-        assertFalse("AgeGroup should NOT be present", discount.getAgeGroupDiscount().isPresent());
+        assertFalse(discount.getAgeGroupDiscount().isPresent());
     }
 
     @Test
-    public void constructor_WithZeroDiscountAmount_ShouldThrowInvalidDiscountException() {
-        InvalidDiscountException exception = assertThrows(InvalidDiscountException.class, () -> {
-            LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
-            LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            // 0.0 is invalid (must be > 0 and < 1)
-            new LimitedDiscount(start, end, 0.0, "PROMO", "descr");
-        });
-        assertEquals("Discount Amount must be a decimal value between 0 and 1", exception.getMessage());
-    }
-
-    @Test
-    public void constructor_WithDiscountAmountOne_ShouldThrowInvalidDiscountException() {
-        InvalidDiscountException exception = assertThrows(InvalidDiscountException.class, () -> {
-            LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
-            LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            // 1.0 is invalid (must be < 1)
-            new LimitedDiscount(start, end, 1.0, "PROMO", "descr");
-        });
-        assertEquals("Discount Amount must be a decimal value between 0 and 1", exception.getMessage());
-    }
-
-    @Test
-    public void constructor_WithNegativeDiscountAmount_ShouldThrowInvalidDiscountException() {
-        assertThrows(InvalidDiscountException.class, () -> {
-            LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
-            LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-            new LimitedDiscount(start, end, -0.5, "PROMO", "descr");
-        });
-    }
-
-    @Test
-    public void constructor_WithNullPromoCode_ShouldThrowNullAttributeException() {
-        NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
-            LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-
-            new LimitedDiscount(start, end, 0.5, null, "descr");
-        });
-        assertEquals("Promo Code can not be null", exception.getMessage());
-    }
-
-    @Test
-    public void setDiscountAmount_WithValidAmount_ShouldUpdateInheritedField() {
+    public void constructor_WithNullDescriptionForSpecialCondition_ShouldThrowException() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-        LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "PROMO", "descr");
 
-        discount.setDiscountAmount(0.5);
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new LimitedDiscount(
+                        start,
+                        end,
+                        0.2,
+                        "SENIOR_SUMMER",
+                        null
+                )
+        );
 
-        assertEquals(0.5, discount.getDiscountAmount(), 0.0);
+        assertEquals("Condition Description can not be null", exception.getMessage());
     }
 
     @Test
-    public void setPromoCode_WithValidString_ShouldUpdateInheritedField() {
+    public void constructor_WithEmptyDescriptionForSpecialCondition_ShouldThrowException() {
         LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
         LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
-        LimitedDiscount discount = new LimitedDiscount(start, end, 0.1, "OLD_CODE", "descr");
 
-        discount.setPromoCode("NEW_CODE");
+        EmptyStringException exception = assertThrows(
+                EmptyStringException.class,
+                () -> new LimitedDiscount(
+                        start,
+                        end,
+                        0.2,
+                        "SENIOR_SUMMER",
+                        ""
+                )
+        );
 
-        assertEquals("NEW_CODE", discount.getPromoCode());
+        assertEquals("Condition Description can not be empty", exception.getMessage());
+    }
+
+    @Test
+    public void constructor_WithNullDescriptionForAgeGroup_ShouldThrowException() {
+        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
+
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new LimitedDiscount(
+                        start,
+                        end,
+                        0.2,
+                        "SENIOR_SUMMER",
+                        null,
+                        AgeGroupEnum.SENIOR
+                )
+        );
+
+        assertEquals("Description can not be null", exception.getMessage());
+    }
+
+    @Test
+    public void constructor_WithNullGroupFieldForAgeGroup_ShouldThrowException() {
+        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 12, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 3, 10, 12, 0);
+
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new LimitedDiscount(
+                        start,
+                        end,
+                        0.2,
+                        "SENIOR_SUMMER",
+                        "desc",
+                        null
+                )
+        );
+
+        assertEquals("Group can not be null", exception.getMessage());
     }
 }

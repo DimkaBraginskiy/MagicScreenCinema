@@ -1,12 +1,15 @@
 package com.magicscreencinema.domain.inheritance;
 
 import com.magicscreencinema.domain.enums.AgeGroupEnum;
+import com.magicscreencinema.domain.exception.EmptyStringException;
 import com.magicscreencinema.domain.exception.InvalidDiscountException;
 import com.magicscreencinema.domain.exception.NullAttributeException;
+import com.magicscreencinema.domain.model.LimitedDiscount;
 import com.magicscreencinema.domain.model.RegularDiscount;
 import org.junit.Test;
 
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -28,15 +31,15 @@ public class RegularDiscountInheritanceTest {
         assertEquals(DayOfWeek.FRIDAY, regularDiscount.getDayOfWeek().get(0));
 
         // verify Composition (Inherited from Discount)
-        assertTrue("AgeGroupDiscount should be present", regularDiscount.getAgeGroupDiscount().isPresent());
+        assertTrue(regularDiscount.getAgeGroupDiscount().isPresent());
         assertEquals(AgeGroupEnum.TEENAGER, regularDiscount.getAgeGroupDiscount().get().getGroup());
 
         // verify Disjoint Constraint (Should NOT have special condition)
-        assertFalse("SpecialConditionDiscount should NOT be present", regularDiscount.getSpecialConditionDiscount().isPresent());
+        assertFalse(regularDiscount.getSpecialConditionDiscount().isPresent());
     }
 
     @Test
-    public void constructor_WithSpecialConditionParameters_ShouldCheckInheritanceAndComposition() {
+    public void constructor_WithSpecialConditionParameters_ShouldCreateRegularDiscountWithSpecialCondition() {
         String expectedCondition = "Summer Sale";
         RegularDiscount regularDiscount = new RegularDiscount(
                 List.of(DayOfWeek.MONDAY),
@@ -46,61 +49,72 @@ public class RegularDiscountInheritanceTest {
         );
 
         // Verify Composition
-        assertTrue("SpecialConditionDiscount should be present", regularDiscount.getSpecialConditionDiscount().isPresent());
+        assertTrue(regularDiscount.getSpecialConditionDiscount().isPresent());
         assertEquals(expectedCondition, regularDiscount.getSpecialConditionDiscount().get().getConditionDescription());
 
         // Verify Disjoint Constraint
-        assertFalse("AgeGroupDiscount should NOT be present", regularDiscount.getAgeGroupDiscount().isPresent());
+        assertFalse(regularDiscount.getAgeGroupDiscount().isPresent());
     }
 
     @Test
-    public void constructor_WithZeroDiscountAmount_ShouldThrowInvalidDiscountException() {
-        InvalidDiscountException exception = assertThrows(InvalidDiscountException.class, () -> {
-            // 0.0 is invalid (must be > 0 and < 1)
-            new RegularDiscount(List.of(DayOfWeek.MONDAY), 0.0, "PROMO", "descr");
-        });
-        assertEquals("Discount Amount must be a decimal value between 0 and 1", exception.getMessage());
+    public void constructor_WithNullDescriptionForSpecialCondition_ShouldThrowException() {
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new RegularDiscount(
+                        List.of(DayOfWeek.MONDAY),
+                        0.1,
+                        "SUMMER",
+                        null
+                )
+        );
+
+        assertEquals("Condition Description can not be null", exception.getMessage());
     }
 
     @Test
-    public void constructor_WithDiscountAmountOne_ShouldThrowInvalidDiscountException() {
-        InvalidDiscountException exception = assertThrows(InvalidDiscountException.class, () -> {
-            // 1.0 is invalid (must be < 1)
-            new RegularDiscount(List.of(DayOfWeek.MONDAY), 1.0, "PROMO", "descr");
-        });
-        assertEquals("Discount Amount must be a decimal value between 0 and 1", exception.getMessage());
+    public void constructor_WithEmptyDescriptionForSpecialCondition_ShouldThrowException() {
+        EmptyStringException exception = assertThrows(
+                EmptyStringException.class,
+                () -> new RegularDiscount(
+                        List.of(DayOfWeek.MONDAY),
+                        0.1,
+                        "SUMMER",
+                        ""
+                )
+        );
+
+        assertEquals("Condition Description can not be empty", exception.getMessage());
     }
 
     @Test
-    public void constructor_WithNegativeDiscountAmount_ShouldThrowInvalidDiscountException() {
-        assertThrows(InvalidDiscountException.class, () -> {
-            new RegularDiscount(List.of(DayOfWeek.MONDAY), -0.5, "PROMO", "descr");
-        });
+    public void constructor_WithNullDescriptionForAgeGroup_ShouldThrowException() {
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new RegularDiscount(
+                        List.of(DayOfWeek.MONDAY),
+                        0.1,
+                        "SUMMER",
+                        null,
+                        AgeGroupEnum.TEENAGER
+                )
+        );
+
+        assertEquals("Description can not be null", exception.getMessage());
     }
 
     @Test
-    public void constructor_WithNullPromoCode_ShouldThrowNullAttributeException() {
-        NullAttributeException exception = assertThrows(NullAttributeException.class, () -> {
-            new RegularDiscount(List.of(DayOfWeek.MONDAY), 0.5, null, "descr");
-        });
-        assertEquals("Promo Code can not be null", exception.getMessage());
-    }
+    public void constructor_WithNullGroupFieldForAgeGroup_ShouldThrowException() {
+        NullAttributeException exception = assertThrows(
+                NullAttributeException.class,
+                () -> new RegularDiscount(
+                        List.of(DayOfWeek.MONDAY),
+                        0.1,
+                        "SUMMER",
+                        "descr",
+                        null
+                )
+        );
 
-    @Test
-    public void setDiscountAmount_WithValidAmount_ShouldUpdateInheritedField() {
-        RegularDiscount discount = new RegularDiscount(List.of(DayOfWeek.MONDAY), 0.1, "PROMO", "descr");
-
-        discount.setDiscountAmount(0.5);
-
-        assertEquals(0.5, discount.getDiscountAmount(), 0.0);
-    }
-
-    @Test
-    public void setPromoCode_WithValidString_ShouldUpdateInheritedField() {
-        RegularDiscount discount = new RegularDiscount(List.of(DayOfWeek.MONDAY), 0.1, "OLD_CODE", "descr");
-
-        discount.setPromoCode("NEW_CODE");
-
-        assertEquals("NEW_CODE", discount.getPromoCode());
+        assertEquals("Group can not be null", exception.getMessage());
     }
 }
