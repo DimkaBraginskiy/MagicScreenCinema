@@ -1,5 +1,6 @@
 package com.magicscreencinema.domain.model;
 
+import com.magicscreencinema.domain.enums.ContractTypeEnum;
 import com.magicscreencinema.domain.exception.*;
 import org.junit.Test;
 
@@ -38,6 +39,29 @@ public class CustomerTest {
         assertEquals("pass", person.getPassword());
         assertEquals(LocalDate.of(1990, 10, 3), person.getBirthDate());
         assertEquals(0, customer.getLoyaltyPoints());
+    }
+
+    @Test
+    public void constructor_WithValidParametersPhoneNumberNullField_ShouldCreateCustomerWhoIsStaff() {
+        Person person = new Person("Test first", "Test last", null,
+                "example@gmail.com", "pass",
+                LocalDate.of(1990, 10, 3),
+                LocalDate.of(1990, 10, 3), 20, ContractTypeEnum.FULL_TIME , 0);
+        Customer customer = person.getCustomer().get();
+        Staff staff = person.getStaff().get();
+
+        assertEquals("Test first", person.getFirstName());
+        assertEquals("Test last", person.getLastName());
+        assertTrue(person.getPhoneNumber().isEmpty());
+        assertEquals("example@gmail.com", person.getEmail());
+        assertEquals("pass", person.getPassword());
+        assertEquals(LocalDate.of(1990, 10, 3), person.getBirthDate());
+        assertEquals(0, customer.getLoyaltyPoints());
+
+        assertEquals(person, staff.getPerson());
+        assertEquals(LocalDate.of(1990, 10, 3), staff.getHireDate());
+        assertEquals(20, staff.getSalary(), 0.001);
+        assertEquals(ContractTypeEnum.FULL_TIME, staff.getContractType());
     }
 
     @Test
